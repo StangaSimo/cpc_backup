@@ -1,0 +1,132 @@
+\documentclass[10pt]{article}
+\usepackage[a4paper, total={18cm, 25cm}]{geometry}
+\usepackage{graphicx}
+\usepackage[utf8]{inputenc}
+\graphicspath{{./images/}}
+\usepackage{parallel}
+\usepackage{amsmath}
+\usepackage{multicol}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage[scaled]{helvet}
+\usepackage{hyperref} 
+\usepackage{listings}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
+
+%Rimuovere una volta finito
+%\pdfcompresslevel=0
+%\pdfobjcompresslevel=0
+
+\titleformat{\section}
+{\LARGE\bfseries}
+{\thesection}
+{0.33em}
+{}
+
+\titleformat{\subsection}
+{\Large\bfseries}
+{\thesubsection}
+{0.33em}
+{\underline}
+
+\titleformat{\subsubsection}
+{\large\bfseries}
+{\thesubsubsection}
+{0.33em}
+{\underline}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{codeblue}{rgb}{0.78,0.74,0.58}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+% 48 98 210 
+
+\lstset{literate=
+  {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+  {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+  {à}{{\`a}}1 {è}{{\`e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+  {À}{{\`A}}1 {È}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+  {ä}{{\"a}}1 {ë}{{\"e}}1 {ï}{{\"i}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
+  {Ä}{{\"A}}1 {Ë}{{\"E}}1 {Ï}{{\"I}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
+  {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
+  {Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
+  {ã}{{\~a}}1 {ẽ}{{\~e}}1 {ĩ}{{\~i}}1 {õ}{{\~o}}1 {ũ}{{\~u}}1
+  {Ã}{{\~A}}1 {Ẽ}{{\~E}}1 {Ĩ}{{\~I}}1 {Õ}{{\~O}}1 {Ũ}{{\~U}}1
+  {œ}{{\oe}}1 {Œ}{{\OE}}1 {æ}{{\ae}}1 {Æ}{{\AE}}1 {ß}{{\ss}}1
+  {ű}{{\H{u}}}1 {Ű}{{\H{U}}}1 {ő}{{\H{o}}}1 {Ő}{{\H{O}}}1
+  {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {å}{{\r a}}1 {Å}{{\r A}}1
+  {€}{{\euro}}1 {£}{{\pounds}}1 {«}{{\guillemotleft}}1
+  {»}{{\guillemotright}}1 {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1 {¡}{{!`}}1 
+}
+
+%\lstdefinestyle{mystyle}{
+%    backgroundcolor=\color{backcolour},   
+%    commentstyle=\color{codegreen},
+%    keywordstyle=\color{magenta},
+%    numberstyle=\tiny\color{codegray},
+%    stringstyle=\color{codepurple},
+%    basicstyle=\ttfamily\footnotesize,
+%    breakatwhitespace=false,         
+%    breaklines=true,                 
+%    captionpos=b,                    
+%    keepspaces=true,                 
+%    numbers=left,                    
+%    numbersep=4pt,                  
+%    showspaces=false,                
+%    showstringspaces=true,
+%    showtabs=false,                  
+%    tabsize=2
+%}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{codeblue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    keepspaces=true,                 
+    frame=single, % single frame
+    numbers=left,       
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=1,
+}
+
+\lstset{style=mystyle}
+
+\title{First Handson Report}
+\author{Simone Stanganini mat. 616834}
+
+\begin{document}
+\maketitle
+
+\vspace{0.3cm}
+\vspace{0.3cm}
+\vspace{0.3cm}
+
+These are my implementations of the 2 problems asked in the handson:
+
+\vspace{0.3cm}
+\vspace{0.3cm}
+
+\begin{itemize}
+    \item \texttt{fn check\_bst()}: calls the recursive function \texttt{rec\_check\_bst()}. This function recursively checks the left and right subtree. The calls return a struct that contains the max and min found in the subtree and if the bst rule was respected. The base case is, of course, true. The first check is for the bad case: when the current node's key is greater than the min from the right subtree or less than the max from the left subtree. If so, we return false and propagate the failure. If we pass this check, we propagate the results and update the min and the max with the current node's key.
+
+    \item \texttt{fn max\_path\_sum()}: This function first create \texttt{max} variable, then calls the recursive function \texttt{rec\_max\_path\_sum()} and passes it as a mutable reference for tracking the maximum path found at every moment, then in the recursive function we get the best path sum from the left and right subtrees. Then we calculates two values: \begin{enumerate} \item \texttt{current\_path\_sum}: the path sum through the current node (key + left + right). \item \texttt{res}: the best path \textbf{to one leaf} to propagate up to the parent (key + max(left, right)). \end{enumerate} Then we updates the global \texttt{max} if \texttt{current\_path\_sum} is larger and we returns \texttt{res} for the parent call. The base case (an empty child) returns 0.
+
+    \vspace{0.3cm}
+\end{itemize}
+
+
+
+\end{document}

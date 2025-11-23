@@ -1,0 +1,618 @@
+#![allow(unused)] /* TODO: remove this */
+use std::fs;
+use std::path::PathBuf;
+
+struct Range { /* range [i,j] structure */
+    i: usize,
+    j: usize
+}
+
+struct LazyNode {
+    key: u32,  /* always positive integers as the prof says*/ 
+    lazy: Option<u32>,  /* lazy value for the lazy controls */
+    range: Range,   
+    left: Option<usize>, 
+    right: Option<usize>
+}
+
+impl LazyNode { /* return new Node */
+    fn new(key: u32, range: Range) -> Self {
+        Self {
+            key,
+            range,
+            lazy: None,
+            left: None,
+            right: None,
+        }
+    }
+}
+
+/* TODO:  creare l'albero dall'array */
+/* TODO:  update */ 
+/* TODO:  max */ 
+pub struct STlazy {
+    nodes: Vec<LazyNode>,
+}
+
+impl STlazy {
+    /* first constructor */ 
+    pub fn new() -> Self {
+        Self{
+            nodes: vec![],
+        }
+    }
+
+    /* build the lazy tree */ 
+    pub fn build(&mut self, a: Vec<u32>) {
+        let n: usize = a.len(); /* n len */
+        
+        /* TODO:: the root id will be the last element */
+
+        /* build the ST dividing the array a in segment, starting from the root of the ST */
+        self.rec_build(&a, 0, n-1);
+    }
+
+    fn rec_build(&mut self, a: &Vec<u32>, i: usize, j: usize) -> usize {
+        if i == j { /* we are in a leaf */
+            let id = self.nodes.len(); /* i use this metod to keep the right id of the nodes */
+            self.nodes.push(LazyNode::new(a[i], Range {i, j})); 
+            return id 
+        } 
+         
+        /* recursive calls */ 
+        let id_left = self.rec_build(a, i, (i+j)/2);
+        let id_right = self.rec_build(a, (i+j)/2 + 1, j);
+        
+        let max = self.nodes[id_left].key.max(self.nodes[id_right].key);  /* max beetween left and right nodes */
+
+        /* insert the node in the tree */
+        let id = self.nodes.len();
+        self.nodes.push(LazyNode { key: max, 
+                                   range: Range {i, j}, 
+                                   lazy: None, 
+                                   left: Some(id_left), 
+                                   right: Some(id_right)}); 
+        id
+    }
+
+    /* do the update */
+    pub fn update(&mut self, i: usize, j: usize, t: u32) {
+        let n = self.nodes.len()-1; /* start from the root */
+        let void = self.rec_update(n, i-1, j-1, t); 
+    }
+
+    fn rec_update(&mut self, cur_id: usize, i: usize, j: usize, t: u32) -> u32 {
+        //let node = &mut self.nodes[cur_id];
+        let range : &Range = &self.nodes[cur_id].range;
+        let id_left : Option<usize> = self.nodes[cur_id].left;
+        let id_right : Option<usize> = self.nodes[cur_id].right;
+        let lazy: Option<u32> = self.nodes[cur_id].lazy;
+
+        /* no overlap  return do nothing */
+        if (range.j < i || range.i > j){
+            return self.nodes[cur_id].key
+        }
+
+        /* leaf case, total or partial overlap, update in both cases */
+        if id_left == None && id_right == None { 
+            /* check for lazy */
+            let key = t.min(self.nodes[cur_id].key);
+            self.nodes[cur_id].key = key;
+            return key
+        }
+        
+        /* total overlap, we don't update but we check in the lazy tree */
+        if ((i <= range.i && j >= range.j)) {
+            if lazy == None {
+                self.nodes[cur_id].lazy = Some(t);
+                return self.nodes[cur_id].key.min(t) /* we return the current min beetween t and node.key */ 
+            }
+            self.nodes[cur_id].lazy = Some(lazy.unwrap().min(t));
+
+            //TODO: check if it still works if we update becouse its stupid like this.
+            return self.nodes[cur_id].key.min(lazy.unwrap()) /* we still return the minimum */ 
+        }
+        
+        /* if we aren't in no overlap or total overlap, then we are in partial overlap */
+  
+        /* always check for previusly lazy values */ 
+        if (lazy == None) {
+            let max_left: u32 = self.rec_update(id_left.unwrap(), i, j, t);
+            let max_right: u32 = self.rec_update(id_right.unwrap(), i, j, t);
+            let max = max_left.max(max_right);
+            self.nodes[cur_id].key = max;
+            return max
+             
+        }
+        /* if there is a lazy it means that there was a total overlap, so we have to propagate */
+
+        /* first we propagate the lazy value, and then we call the rec_update */
+        self.propagate(id_left.unwrap(), id_right.unwrap(), lazy.unwrap()); 
+        self.nodes[cur_id].lazy = None;
+
+        let max_left: u32 = self.rec_update(id_left.unwrap(), i, j, t);
+        let max_right: u32 = self.rec_update(id_right.unwrap(), i, j, t);
+        
+        self.nodes[cur_id].key = max_left.max(max_right);
+        self.nodes[cur_id].key
+    }
+    
+    /* answer the max query */
+    pub fn max(&mut self, i: usize, j: usize) -> u32 {
+        let n = self.nodes.len()-1; /* start from the root */
+        let mut result = 0;
+        self.rec_max(n, i-1, j-1, &mut result);
+        result
+    }
+
+    fn rec_max(&mut self, cur_id: usize, i: usize, j: usize, result: &mut u32) -> u32 {
+        let node = &mut self.nodes[cur_id];
+        //let range = &node.range;
+
+        /* no overlap return min */
+        if (node.range.j < i || node.range.i > j){
+            return node.key
+        }
+
+        /* leaf case */
+        if node.left == None && node.right == None { 
+            if (node.lazy == None) {
+
+                if ((i <= node.range.i && j >= node.range.j)) {
+                    *result = node.key.max(*result);
+                }
+                //println!("range:[{:?},{:?}] ritorno: {:?}", node.range.i, node.range.j, node.key);
+                return node.key
+            }
+            /* lazy case, here in the leaf and not when we propagate */ 
+            node.key = node.key.min(node.lazy.unwrap());
+            node.lazy = None;
+            if ((i <= node.range.i && j >= node.range.j)) {
+                *result = node.key.max(*result);
+            }
+            return node.key
+        }
+
+        let id_left = node.left.unwrap();
+        let id_right = node.right.unwrap();
+
+        /* total overlap, we check the lazy status and propagate */ 
+        if ((i <= node.range.i && j >= node.range.j)) {
+            /* no lazy update then we just return the answer */
+            if node.lazy == None {
+                *result = node.key.max(*result); 
+                return node.key
+            }
+
+            /* lazy situation, change the value and propagate */
+            let lazy_value = node.lazy.unwrap();
+
+            let max = node.key.min(lazy_value);
+            self.nodes[cur_id].key  = max;
+            
+            self.nodes[cur_id].lazy = None;
+
+            /* propagate */ 
+            self.propagate(id_left, id_right, lazy_value);
+
+            /* result of the query */
+            *result = max.max(*result); 
+
+            return max
+        }
+
+        /* partial overlap, update if needed always propagate */ 
+        if node.lazy != None {             
+            let lazy_value = node.lazy.unwrap();
+            self.nodes[cur_id].key = self.nodes[cur_id].key.min(lazy_value);
+            self.nodes[cur_id].lazy = None;
+
+            /* propagate */
+            self.propagate(id_left, id_right, lazy_value);
+        }
+
+        let max_left = self.rec_max(id_left, i, j, result);
+        let max_right = self.rec_max(id_right, i, j, result);
+        let max = max_right.max(max_left);
+
+        //TODO: BUG TROVATO; NEL PARTIAL OVERLAP SI PRENDO SOLO CHI STA DENTRO IL PARTIAL NON TUTTI
+        *result = max.max(*result); 
+
+        //println!("range:[{:?},{:?}]  i:{:?} j:{:?} max = {:?}",self.nodes[cur_id].range.i, self.nodes[cur_id].range.j, i, j, max);
+        //println!("max_right : {:?} max_left : {:?}",max_right, max_left);
+        //self.nodes[cur_id].key = max; 
+
+        max
+    }
+
+    pub fn propagate(&mut self, id_left: usize, id_right: usize, t: u32) {
+        let left_lazy = self.nodes[id_left].lazy;           
+        let right_lazy = self.nodes[id_right].lazy;           
+
+        if (left_lazy == None) {
+            self.nodes[id_left].lazy = Some(t);
+        } else {
+            self.nodes[id_left].lazy = Some(t.min(left_lazy.unwrap()));
+        }
+
+        if (right_lazy == None) {
+            self.nodes[id_right].lazy = Some(t);
+        } else {
+            self.nodes[id_right].lazy = Some(t.min(right_lazy.unwrap()));
+        }
+
+        if (self.nodes[id_left].left == None && self.nodes[id_left].right == None) {
+            self.nodes[id_left].key = self.nodes[id_left].key.min(self.nodes[id_left].lazy.unwrap());
+        }
+
+        if (self.nodes[id_right].left == None && self.nodes[id_right].right == None) {
+            self.nodes[id_right].key = self.nodes[id_right].key.min(self.nodes[id_right].lazy.unwrap());
+        }
+    }
+
+    pub fn print_tree(&self) {
+        if self.nodes.is_empty() {
+            println!("Albero vuoto");
+            return;
+        }
+        // La radice è l'ultimo elemento nel tuo vettore
+        let root_idx = self.nodes.len() - 1;
+        
+        println!("\n--- VISUALIZZAZIONE (Ruotata 90° a sx) ---");
+        println!("(R = Right Child, L = Left Child)\n");
+        self.rec_print_rotated(root_idx, 0, "ROOT");
+        println!("------------------------------------------\n");
+    }
+
+    // Stampa ricorsiva In-Order Inversa: Destra -> Centro -> Sinistra
+    fn rec_print_rotated(&self, id: usize, space: usize, prefix: &str) {
+        let node = &self.nodes[id];
+        let spacing = 10; // Quanti spazi di indentazione per livello
+
+        // 1. Scendi a DESTRA (in alto nella visualizzazione)
+        if let Some(r) = node.right {
+            self.rec_print_rotated(r, space + spacing, "R");
+        }
+
+        // 2. Stampa il NODO CORRENTE
+        println!(); // Riga vuota per separare verticalmente i nodi
+        
+        // Creiamo la stringa di spazi
+        let indent = " ".repeat(space);
+        
+        // Formattazione carina: FRECCIA + TIPO + DATI
+        // Es: "          R ────> [5-9] Val:10 (Lazy: 2)"
+        println!("{}{}{}{} [{}, {}] Val: {} Lazy: {:?}", 
+            indent,
+            prefix,
+            if space > 0 { " ────> " } else { "" }, // Freccia solo se non è root
+            if space == 0 { "ROOT" } else { "" },
+            node.range.i, 
+            node.range.j, 
+            node.key, 
+            node.lazy
+        );
+
+        // 3. Scendi a SINISTRA (in basso nella visualizzazione)
+        if let Some(l) = node.left {
+            self.rec_print_rotated(l, space + spacing, "L");
+        }
+    }
+
+}
+
+/* TODO:  2 problema */
+
+pub fn test() {
+    let mut st = STlazy::new(); 
+  
+    // Vettore input (copiato fedelmente)
+    let vec = vec![
+        32, 21, 37, 23, 39, 17, 36, 3, 33, 25, 
+        30, 15, 26, 42, 27, 20, 27, 2, 41, 31, 
+        50, 22, 16, 9, 1, 50, 24, 4, 22, 28, 
+        14, 5, 18, 38, 39, 9, 2, 46, 36, 34, 
+        21, 11, 10, 15, 26, 40, 12, 3, 48, 35
+    ];
+
+    println!("Costruzione Albero...");
+    st.build(vec);
+    st.print_tree(); // Stato iniziale
+    println!("--------------------------------------------------");
+
+    // 0 18 25 2
+    println!("\n--- CMD: Update 18 25 2 ---");
+    st.update(18, 25, 2);
+    st.print_tree();
+
+    // 1 49 50 -> Output 48
+    check(&mut st, 49, 50, 48);
+    // Opzionale: st.print_tree(); se vuoi vedere se la query max fa casini (non dovrebbe modificare)
+
+    // 0 40 49 3
+    println!("\n--- CMD: Update 40 49 3 ---");
+    st.update(40, 49, 3);
+    st.print_tree();
+
+    // 1 26 46 -> Output 50
+    check(&mut st, 26, 46, 50);
+
+    // 0 11 21 27
+    println!("\n--- CMD: Update 11 21 27 ---");
+    st.update(11, 21, 27);
+    st.print_tree();
+
+    // 1 13 35 -> Output 50
+    check(&mut st, 13, 35, 50);
+
+    // 0 12 38 15
+    println!("\n--- CMD: Update 12 38 15 ---");
+    st.update(12, 38, 15);
+    st.print_tree();
+
+    // 0 25 29 4
+    println!("\n--- CMD: Update 25 29 4 ---");
+    st.update(25, 29, 4);
+    st.print_tree();
+
+    // 0 8 36 18
+    println!("\n--- CMD: Update 8 36 18 ---");
+    st.update(8, 36, 18);
+    st.print_tree();
+
+    // 1 31 50 -> Output 36
+    check(&mut st, 31, 50, 36);
+
+    // 1 46 49 -> Output 3
+    check(&mut st, 46, 49, 3);
+
+    // 1 19 23 -> Output 2
+    check(&mut st, 19, 23, 2);
+
+    // 1 42 46 -> Output 3
+    check(&mut st, 42, 46, 3);
+
+    // 0 43 49 3
+    println!("\n--- CMD: Update 43 49 3 ---");
+    st.update(43, 49, 3);
+    st.print_tree();
+
+    // 1 1 44 -> Output 39
+    check(&mut st, 1, 44, 39);
+
+    // 0 25 37 4
+    println!("\n--- CMD: Update 25 37 4 ---");
+    st.update(25, 37, 4);
+    st.print_tree();
+
+    // 1 13 16 -> Output 15
+    check(&mut st, 13, 16, 15);
+
+    // 1 42 42 -> Output 3
+    check(&mut st, 42, 42, 3);
+
+    // 1 36 49 -> Output 36
+    check(&mut st, 36, 49, 36);
+
+    // 0 42 50 48
+    println!("\n--- CMD: Update 42 50 48 ---");
+    st.update(42, 50, 48);
+    st.print_tree();
+
+    // 1 38 38 -> Output 15
+    check(&mut st, 38, 38, 15);
+
+    // 0 5 50 36
+    println!("\n--- CMD: Update 5 50 36 ---");
+    st.update(5, 50, 36);
+    st.print_tree();
+
+    // 1 35 35 -> Output 4
+    check(&mut st, 35, 35, 4);
+
+    // 0 7 20 41
+    println!("\n--- CMD: Update 7 20 41 ---");
+    st.update(7, 20, 41);
+    st.print_tree();
+
+    // 0 1 35 26
+    println!("\n--- CMD: Update 1 35 26 ---");
+    st.update(1, 35, 26);
+    st.print_tree();
+
+    // 1 35 42 -> Output 36
+    check(&mut st, 35, 42, 36);
+
+    // 1 10 33 -> Output 18
+    check(&mut st, 10, 33, 18);
+
+    // 1 4 42 -> Output 36
+    check(&mut st, 4, 42, 36);
+
+    // 1 46 47 -> Output 3
+    check(&mut st, 46, 47, 3);
+
+    // 1 9 23 -> Output 18
+    check(&mut st, 9, 23, 18);
+
+    // 1 34 50 -> Output 36
+    check(&mut st, 34, 50, 36);
+
+    // 0 19 40 9
+    println!("\n--- CMD: Update 19 40 9 ---");
+    st.update(19, 40, 9);
+    st.print_tree();
+
+    // 1 28 32 -> Output 4
+    check(&mut st, 28, 32, 4);
+
+    // 1 31 33 -> Output 4
+    check(&mut st, 31, 33, 4);
+
+    // 0 33 39 38
+    println!("\n--- CMD: Update 33 39 38 ---");
+    st.update(33, 39, 38);
+    st.print_tree();
+
+    // 0 29 44 5
+    println!("\n--- CMD: Update 29 44 5 ---");
+    st.update(29, 44, 5);
+    st.print_tree();
+
+    // 1 17 19 -> Output 15
+    check(&mut st, 17, 19, 15);
+
+    // 1 47 49 -> Output 3
+    check(&mut st, 47, 49, 3);
+
+    // 1 30 41 -> Output 5
+    check(&mut st, 30, 41, 5);
+
+    // 1 45 48 -> Output 3
+    check(&mut st, 45, 48, 3);
+
+    // 0 41 45 15
+    println!("\n--- CMD: Update 41 45 15 ---");
+    st.update(41, 45, 15);
+    st.print_tree();
+
+    // 0 35 42 39
+    println!("\n--- CMD: Update 35 42 39 ---");
+    st.update(35, 42, 39);
+    st.print_tree();
+
+    // 1 1 39 -> Output 26
+    check(&mut st, 1, 39, 26);
+
+    // 0 49 49 48
+    println!("\n--- CMD: Update 49 49 48 ---");
+    st.update(49, 49, 48);
+    st.print_tree();
+
+    // 0 3 28 17
+    println!("\n--- CMD: Update 3 28 17 ---");
+    st.update(3, 28, 17);
+    st.print_tree();
+
+    // 1 48 48 -> Output 3
+    check(&mut st, 48, 48, 3);
+
+    // 0 36 49 34
+    println!("\n--- CMD: Update 36 49 34 ---");
+    st.update(36, 49, 34);
+    st.print_tree();
+
+    // 1 3 22 -> Output 17
+    check(&mut st, 3, 22, 17);
+
+    // 1 7 25 -> Output 17
+    check(&mut st, 7, 25, 17);
+
+    // 1 43 50 -> Output 35
+    check(&mut st, 43, 50, 35);
+}
+
+// Funzione helper
+fn check(st: &mut STlazy, i: usize, j: usize, exp: u32) {
+    let res = st.max(i, j);
+    // Se serve, decommenta per vedere l'albero anche dopo le query
+     st.print_tree(); 
+    let ok = if res == exp { "✅" } else { "❌" };
+    println!("Max [{}, {}] -> Got: {:<3} | Exp: {:<3} {}", i, j, res, exp, ok);
+}
+
+
+pub fn fetch_and_test_min_max(input_folder: &str, output_folder: &str) {
+    let mut input_files : Vec<PathBuf> = fs::read_dir(input_folder)
+        .expect("ERROR TEST FILES")
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path())
+        .collect();
+
+    let mut output_files : Vec<PathBuf> = fs::read_dir(output_folder)
+        .expect("ERROR OUTPUT FILES")
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path())
+        .collect();
+
+    /* sort first by length then by string (se no input10 era meno di input2) */
+    input_files.sort_by_key(|p| (p.to_str().unwrap().len(), p.clone()));
+    output_files.sort_by_key(|p| (p.to_str().unwrap().len(), p.clone()));
+
+    let mut input_iter = input_files.iter(); let mut output_iter = output_files.iter();
+
+    assert!(input_files.len() == output_files.len());
+    for _ in 0..input_files.len() {
+        let input_path = input_iter.next().unwrap();
+        let output_path = output_iter.next().unwrap();
+        let input_string = fs::read_to_string(input_path).unwrap();
+        let output_string = fs::read_to_string(output_path).unwrap();
+
+        println!("\nProcessing {:?} and {:?}", input_path, output_path);
+        
+        let mut input_chars = input_string.split_whitespace();
+        let mut output_chars = output_string.split_whitespace();
+
+        let n: usize = input_chars.next().unwrap().parse().unwrap();
+        let m: usize = input_chars.next().unwrap().parse().unwrap(); 
+
+        let mut a: Vec<u32> = Vec::new();
+
+        for _ in 0..n {
+            let val: u32 = input_chars.next().unwrap().parse().unwrap();
+            a.push(val);
+        }
+
+        let mut st = STlazy::new(); 
+        st.build(a);
+
+        for _ in 0..m {
+            let bit_tipo: u32 = input_chars.next().unwrap().parse().unwrap();
+
+     //        println!("TIPO {:?}", bit_tipo);
+            
+            if bit_tipo == 0 { /* update */
+
+                let i: usize = input_chars.next().unwrap().parse().unwrap();
+                let j: usize = input_chars.next().unwrap().parse().unwrap();
+                let t: u32 = input_chars.next().unwrap().parse().unwrap();
+                st.update(i, j, t);                
+             
+            } else { /* max */
+
+                let i: usize = input_chars.next().unwrap().parse().unwrap();
+                let j: usize = input_chars.next().unwrap().parse().unwrap();
+
+     //           println!("MAX i {:?} j {:?}", i, j);
+                let result: u32 = st.max(i, j);                
+     //           println!("result {:?}", result);
+
+                let output_result: u32 = output_chars.next().unwrap().parse().unwrap();                
+                if (output_result == result) {
+                    println!("TEST PASSED");
+                } else {
+                    println!("TEST FAILED {:?} != {:?}", result, output_result);
+                }
+            } 
+        }
+    }
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
