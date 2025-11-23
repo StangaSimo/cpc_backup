@@ -5,6 +5,6 @@ use handson_2::{fetch_and_test_min_max, test};
  *
  * */
 fn main() {
-   test(); 
-   //fetch_and_test_min_max("tests/1_test/input/", "tests/1_test/output/");
+   //test(); 
+   fetch_and_test_min_max("tests/1_test/input/", "tests/1_test/output/");
 }

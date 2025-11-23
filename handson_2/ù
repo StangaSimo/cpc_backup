@@ -46,13 +46,14 @@ impl STlazy {
     pub fn build(&mut self, a: Vec<u32>) {
         let n: usize = a.len(); /* n len */
         
-        /* build the ST dividing the array a in segment, starting from the root of the ST, note:
-         * the root id will be the last element */
+        /* TODO:: the root id will be the last element */
+
+        /* build the ST dividing the array a in segment, starting from the root of the ST */
         self.rec_build(&a, 0, n-1);
     }
 
     fn rec_build(&mut self, a: &Vec<u32>, i: usize, j: usize) -> usize {
-        if i == j { /* leaf case */
+        if i == j { /* we are in a leaf */
             let id = self.nodes.len(); /* i use this metod to keep the right id of the nodes */
             self.nodes.push(LazyNode::new(a[i], Range {i, j})); 
             return id 
@@ -89,60 +90,43 @@ impl STlazy {
 
         /* no overlap  return do nothing */
         if (range.j < i || range.i > j){
-            if id_left != None && id_right != None { 
-                if lazy != None {
-                    self.nodes[cur_id].key = lazy.unwrap().min(self.nodes[cur_id].key); 
-                    self.propagate(id_left.unwrap(), id_right.unwrap(), lazy.unwrap());    
-                    self.nodes[cur_id].lazy = None;
-                }
-            }
             return self.nodes[cur_id].key
         }
 
         /* leaf case, only total overlap possible */
         if id_left == None && id_right == None { 
+            /* check for lazy */
             let key = t.min(self.nodes[cur_id].key);
             self.nodes[cur_id].key = key;
             return key
         }
         
-        /* total overlap, update the current max and propagate */
+        /* total overlap, update and propagate */
         if ((i <= range.i && j >= range.j)) {
             if lazy == None {
                 self.nodes[cur_id].key = t.min(self.nodes[cur_id].key);
-                self.propagate(id_left.unwrap(), id_right.unwrap(), t);
                 return self.nodes[cur_id].key /* we return the current min beetween t and node.key */ 
             }
+            self.nodes[cur_id].lazy = Some(lazy.unwrap().min(t));
 
-            let min_lazy = lazy.unwrap().min(t); 
-
-            /* lazy already present we keep the min lazy */
-            self.nodes[cur_id].key = min_lazy.min(self.nodes[cur_id].key);
-             
-            /* propagate the minimum */
-            self.propagate(id_left.unwrap(), id_right.unwrap(), min_lazy);
-            self.nodes[cur_id].lazy = None;
-
-            return self.nodes[cur_id].key 
+            //TODO: check if it still works if we update becouse its stupid like this.
+            return self.nodes[cur_id].key.min(lazy.unwrap()) /* we still return the minimum */ 
         }
         
-        /* partial overlap */
         /* if we aren't in no overlap or total overlap, then we are in partial overlap */
   
         /* always check for previusly lazy values */ 
-        if lazy == None {
-            /* take the max beetween childrens and update the key */ 
+        if (lazy == None) {
             let max_left: u32 = self.rec_update(id_left.unwrap(), i, j, t);
             let max_right: u32 = self.rec_update(id_right.unwrap(), i, j, t);
             let max = max_left.max(max_right);
             self.nodes[cur_id].key = max;
-            return self.nodes[cur_id].key
+            return max
+             
         }
-
         /* if there is a lazy it means that there was a total overlap, so we have to propagate */
-        /* first we propagate the lazy value as the total overlap, then we call the rec_update 
-         * and if needed we update the max */
-        self.nodes[cur_id].key = self.nodes[cur_id].key.min(lazy.unwrap());
+
+        /* first we propagate the lazy value, and then we call the rec_update */
         self.propagate(id_left.unwrap(), id_right.unwrap(), lazy.unwrap()); 
         self.nodes[cur_id].lazy = None;
 
@@ -150,7 +134,6 @@ impl STlazy {
         let max_right: u32 = self.rec_update(id_right.unwrap(), i, j, t);
         
         self.nodes[cur_id].key = max_left.max(max_right);
-
         self.nodes[cur_id].key
     }
     
@@ -166,13 +149,24 @@ impl STlazy {
         let node = &mut self.nodes[cur_id];
         //let range = &node.range;
 
-        /* no overlap */
+        /* no overlap return min */
         if (node.range.j < i || node.range.i > j){
             return node.key
         }
 
         /* leaf case */
         if node.left == None && node.right == None { 
+            if (node.lazy == None) {
+
+                if ((i <= node.range.i && j >= node.range.j)) {
+                    *result = node.key.max(*result);
+                }
+                //println!("range:[{:?},{:?}] ritorno: {:?}", node.range.i, node.range.j, node.key);
+                return node.key
+            }
+            /* lazy case, here in the leaf and not when we propagate */ 
+            node.key = node.key.min(node.lazy.unwrap());
+            node.lazy = None;
             if ((i <= node.range.i && j >= node.range.j)) {
                 *result = node.key.max(*result);
             }
@@ -190,20 +184,21 @@ impl STlazy {
                 return node.key
             }
 
-            /* lazy situation, propagate */
+            /* lazy situation, change the value and propagate */
             let lazy_value = node.lazy.unwrap();
 
-            let min = node.key.min(lazy_value);
-            self.nodes[cur_id].key  = min;
+            let max = node.key.min(lazy_value);
+            self.nodes[cur_id].key  = max;
+            
             self.nodes[cur_id].lazy = None;
 
             /* propagate */ 
             self.propagate(id_left, id_right, lazy_value);
 
             /* result of the query */
-            *result = self.nodes[cur_id].key.max(*result); 
+            *result = max.max(*result); 
 
-            return self.nodes[cur_id].key
+            return max
         }
 
         /* partial overlap, update if needed always propagate */ 
@@ -221,7 +216,7 @@ impl STlazy {
         let max = max_right.max(max_left);
 
         //TODO: BUG TROVATO; NEL PARTIAL OVERLAP SI PRENDO SOLO CHI STA DENTRO IL PARTIAL NON TUTTI
-        //*result = max.max(*result); 
+        *result = max.max(*result); 
 
         //println!("range:[{:?},{:?}]  i:{:?} j:{:?} max = {:?}",self.nodes[cur_id].range.i, self.nodes[cur_id].range.j, i, j, max);
         //println!("max_right : {:?} max_left : {:?}",max_right, max_left);
@@ -237,7 +232,6 @@ impl STlazy {
         if (left_lazy == None) {
             self.nodes[id_left].lazy = Some(t);
         } else {
-            /* lazy already present */
             self.nodes[id_left].lazy = Some(t.min(left_lazy.unwrap()));
         }
 
@@ -246,8 +240,7 @@ impl STlazy {
         } else {
             self.nodes[id_right].lazy = Some(t.min(right_lazy.unwrap()));
         }
-        
-        /* leaf case */
+
         if (self.nodes[id_left].left == None && self.nodes[id_left].right == None) {
             self.nodes[id_left].key = self.nodes[id_left].key.min(self.nodes[id_left].lazy.unwrap());
         }
