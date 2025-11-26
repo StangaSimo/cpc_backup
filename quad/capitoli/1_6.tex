@@ -1,0 +1,954 @@
+\section{Data Structure}
+
+\subsection{Max Heap}
+\begin{itemize}
+    \item Estrarre il massimo $\Theta (\log |n|)$
+    \item Vedere il massimo $\Theta (1)$
+    \item Inserire un nuovo elemento $\Theta (\log |n|)$
+\end{itemize}
+
+Notare: \textbf{NON} si può eliminare un elemento arbitrario, inoltre è un array in memoria.
+
+\subsection{BST}
+Ha tutte le operazioni con costo $\Theta (\log n)$, NON può conservare elementi
+diversi.
+
+Left sub tree U $\le$ del nodo U, e sub tree di destra $>$. 
+
+\begin{center}
+\includegraphics[scale=0.3]{Screenshot 2024-02-01 at 14.14.47.png}
+\end{center}
+
+
+\begin{itemize}
+    \item Insert(key)
+    \item Delete(key)
+    \item Search(key)
+    \item Pred(key)
+    \item Succ(key)
+    \item Max(key)
+    \item Min(key)
+\end{itemize}
+
+\subsection{DEQUE Double-Ended Queue}
+
+\begin{center}
+\includegraphics[scale=0.3]{Screenshot 2024-02-01 at 14.14.03.png}
+\end{center}
+
+
+E’ una coda FIFO, che può avere operazioni di pop
+e push su entrambi i lati, per cui, è una
+generalizzazione della coda.
+Costo lineare per inserire ed eliminare.
+Abbiamo pop\_front e push\_back che sono le operazioni di una normale queue FIFO (pop e
+push), ma con questa possiamo fare pop\_back e push\_front.
+
+\clearpage
+
+\section{Kadane Algoritm} % (fold)
+%\label{sec:kadane_algoritm}
+
+% section Kadane Algoritm (end)
+Dato un array di interi positivi e negativi, trovare il sub-array continuo con la massima somma.
+
+\begin{multicols}{2}
+    \begin{lstlisting}[language=Rust]
+        /* O(n^3) */
+        fn simple_sol (v: &Vec<i32>) -> i64 {
+            let mut max: i64 = 0;
+            let len: usize = v.len();
+            for i in 0..len {
+                for j in i..len {
+                    let mut sum: i64 = 0;
+                    for k in i..(j+1) {
+                        sum = sum + v[k] as i64;                
+                    } 
+                    if sum > max {
+                        max = sum;
+                    }
+                } 
+            }
+            max
+        } 
+    \end{lstlisting}
+
+    \columnbreak
+
+    \begin{center}
+        \includegraphics[scale=0.2]{Screenshot 2024-02-01 at 14.24.58.png}
+    \end{center}
+\end{multicols}
+
+Qua c’è una soluzione easy, dove andiamo a prendere tutti i possibili sub-array, uno alla volta, e prendiamo il massimo. \texttt{i} scorre l’array, \texttt{j} scorre da \texttt{i} a \texttt{len} per prendere tutte le posizioni e \texttt{k} fa la somma da a \texttt{i} a \texttt{j} compresa.
+
+\begin{lstlisting}[language=Rust]
+/* O(n^2) */
+fn sol (v: &Vec<i32>) -> i64 {
+    let mut max: i64 = 0;
+    let len: usize = v.len();
+    for i in 0..len {
+        let mut sum: i64 = 0;
+        for j in i..len {
+            sum = sum + v[j] as i64;                
+            if sum > max {
+                max = sum;
+            }
+        } 
+    }
+    max
+}
+\end{lstlisting}
+
+Visto che nella prima soluzione al cambiare di \texttt{j} rifacciamo
+sempre la solita somma con \texttt{k}, invece che ripartire da \texttt{i} ed
+arrivare a \texttt{j} facendo sempre le stesse operazioni, togliamo
+\texttt{k} e facciamo direttamente il calcolo senza rifare le stesse cose
+ogni volta.
+
+\begin{lstlisting}[language=Rust]
+/* O(n) :) */
+fn kadane (v: &Vec<i32>) -> i64 {
+    let mut max:i64 = 0;
+    let mut sum:i64 = 0;
+    let len: usize = v.len();
+
+    for i in 0..len {
+        if sum > 0 {
+            sum  = sum + v[i] as i64;
+        } else {
+            sum = v[i] as i64;
+        }
+        if sum > max { 
+            max = sum;
+        } 
+    }
+    max
+}
+\end{lstlisting}
+
+Adesso per raggiungere il lineare possiamo sfruttare due cose, ovvero se c’è un numero negativo.
+Abbiamo due proprietà da sfruttare, ovvero se ci sono numeri negativi dobbiamo toglierli, e se ci sono numeri positivi dobbiamo metterli, questo non implica il fatto che non vada messi a priori perché potremmo avere un sub array con numeri negativi che sia maggiore di quello che avremmo non
+includendoli.
+Detto questo basta che controlliamo e quando la somma diventa negativa si riparte perché non ha senso tenerla, FINE DEL DISCORSO, solo cazzi.
+
+
+
+
+
+
+\section{Sliding Window Maximum}
+Dato un array \texttt{A[1,n]} e un intero \texttt{k}, trovare l’elemento più grande di ogni finestra lunga \texttt{k}.
+
+\begin{center}
+\includegraphics[scale=0.3]{Screenshot 2024-02-01 at 14.32.08.png}
+\end{center}
+
+La soluzione più semplice è di prendere tutte le possibili finestre e confrontarle.
+Sotto il one liner del prof illeggibile per mostrare la bellezza di rust (?)
+
+\begin{lstlisting}[language=Rust]
+/* O(n*k) */
+fn trivial(v: &Vec<i32>) -> Vec<i32> {
+    let mut res: Vec<i32> = Vec::with_capacity(N - K + 1);
+
+    for i in 0..(N - K + 1) {
+        let slice = &v[i..i + K];
+        let max = *slice.iter().max().unwrap();
+        res.push(max);
+    }
+
+    res
+}
+
+fn one_liner_trivial(v: &Vec<i32>) -> Vec<i32> {
+    v.windows(K).map(|w| *w.iter().max().unwrap()).collect()
+}
+\end{lstlisting}
+
+Abbiamo bisogno di DS (Data Structure) per risolvere questo problema con una velocità
+quadratica o lineare.
+
+Per analizzare quale sia la struttura dati migliore, andiamo a vedere le operazioni che dobbiamo fare per ogni iterazione:
+
+\begin{itemize}
+  \item Rimuovere un elemento
+  \item Inserire un elemento
+  \item Restituire il massimo
+\end{itemize}
+
+\subsection{BST}
+Target Complexity: $\Theta (n \log k)$
+
+
+\begin{lstlisting}[language=Rust]
+fn bts_sol(v: &Vec<i32>) -> Vec<i32> {
+  let mut res: Vec<i32> = Vec::with_capacity(N - K + 1);
+  let mut set = BTreeSet::new();
+  let mut max_sf = v[0]; /* max so far */
+
+  for (i, &n) in v.iter().enumerate() {
+    set.insert((n, i));
+    max_sf = max_sf.max(n);
+
+    if i >= K {
+      set.remove(&(v[i - K], i - K)); /* remove the left window number */
+      if max_sf == v[i - K] {
+          max_sf = set.last().unwrap().0; /* the bigger of the window **cost** */
+      }
+    }
+
+    if i >= K - 1 {
+      /* for the first window, and the other's */
+      res.push(max_sf);
+    }
+  }
+
+  res
+}
+\end{lstlisting}
+
+Non potendo mettere i soliti elementi andiamo a tenerci la posizione e il valore dell’elemento nell’array all’interno dell’albero.
+
+Dobbiamo gestire il fatto che all’inizio non siamo nemmeno alla fine della finestra, per cui teniamo per bene il massimo degli elementi che mettiamo, e quando arriviamo al momento della prima finestra vera (secondo if), e poi verrà usato sempre per mettere il massimo.
+L’obbiettivo è tenere la finestra dentro il bst, e prendere il massimo quando serve, usando la funzione last(), perché ovviamente in un bst l’elemento più grande sta in fondo a sinistra.
+Possiamo vedere come se il massimo era l’elemento che è stato tolto dalla finestra allora si va a fare la query più costosa all albero, se no non si fa niente perche il max è sempre \texttt{max\_sf} grazie al fatto che lo aggiorniamo ogni volta.
+
+\subsection{Max Heap}
+Target Complexity: $\Theta (n \log n)$
+
+
+\begin{lstlisting}[language=Rust]
+fn heap_sol(v: &Vec<i32>) -> Vec<i32> {
+  let mut heap: BinaryHeap<(i32, usize)> = BinaryHeap::new();
+  let mut res: Vec<i32> = Vec::with_capacity(N - K + 1);
+
+  for i in 0..K - 1 { /* first window elements */
+    heap.push((v[i], i));
+  }
+
+  for i in K - 1..N {
+    heap.push((v[i], i));
+    /* remove all the maxes outside the window */
+    while let Some((_, idx)) = heap.peek() {
+      if *idx < i - (K - 1) {
+        heap.pop();
+      } else {
+        break;
+      }
+    }
+
+    res.push(heap.peek().unwrap().0);
+  }
+
+  res
+}
+\end{lstlisting}
+
+Andiamo a caricare un elemento (con la posizione nell’array) per volta nella finestra, e visto che guardare il massimo nell’heap costa  $\Theta (1)$, andiamo sempre a guardare il massimo, se questo è fuori dalla finestra visto che controlliamo l’index lo togliamo dall’heap e via cosi.
+
+Notare come il costo sia dato dal fatto che si inserisce \texttt{n} volte gli elementi all’interno dell’heap, e estraiamo in caso il massimo, per cui sempre $\log n$ costo in ogni caso.
+
+\subsection{Double-Ended Queue} % (fold)
+Si usa questa struttura, vogliamo avere sempre il massimo della window corrente nella testa della coda.
+
+\begin{lstlisting}[language=Rust]
+fn deque_sol(v: &Vec<i32>) -> Vec<i32> {
+  let mut q: VecDeque<usize> = VecDeque::new();
+  let mut res: Vec<i32> = Vec::with_capacity(N - K + 1);
+
+  for i in 0..K { /* first window  */
+    while (!q.is_empty()) && v[i] > v[*q.back().unwrap()] {
+      q.pop_back(); /* pop al contrario */
+    }
+
+    q.push_back(i); /* normal push */
+  }
+
+  res.push(v[*q.front().unwrap()]); /* first max of the window */
+
+  for i in K..N {
+    /* remove all the elemnt outside window */
+    while !q.is_empty() && q.front().unwrap() + K <= i {
+      q.pop_front();
+    }
+
+    while (!q.is_empty()) && v[i] > v[*q.back().unwrap()] {
+      q.pop_back();
+    }
+
+    q.push_back(i);
+    res.push(v[*q.front().unwrap()]);
+  }
+
+  res
+}
+    
+\end{lstlisting}
+% subsection Double-Ended Queue (end)
+
+Dimostriamo la correttezza: 
+
+\begin{itemize}
+    \item Prop 1: q è ordinato in ordine decrescente
+
+        Un elemento è un right leader, se e se solo se, è più grande di qualsiasi altro elemento alla sua destra.
+        \begin{center}
+            \includegraphics[scale=0.3]{Screenshot 2024-02-01 at 15.15.56.png}
+            \includegraphics[scale=0.3]{Screenshot 2024-02-01 at 15.16.18.png}
+        \end{center}
+
+    \item Prop 2: ad ogni iterazione q contiene solo right leader
+        \begin{center}
+        \includegraphics[scale=0.3]{Screenshot 2024-02-01 at 15.17.15.png}
+        \end{center}
+\end{itemize}
+
+\clearpage
+
+\section{Binary Search for Social Distance} % (fold)
+
+% section Binary Search for Social Distance (end)
+
+\begin{multicols}{2}
+\begin{lstlisting}[language=Rust]
+fn binary_search<T: Ord>(arr: &[T], key: T) -> Option<usize> {
+    let mut l = 0;
+    let mut r = arr.len();
+
+    while l < r {
+        let m = l + (r - l)/2;
+
+        match key.cmp(&arr[m]) {
+            std::cmp::Ordering::Equal   => return Some(m),
+            std::cmp::Ordering::Less    => r = m,
+            std::cmp::Ordering::Greater => l = m + 1,
+        }
+    }
+    None
+}
+
+\end{lstlisting} 
+
+    \columnbreak
+
+    Esempio di ricerca binaria fatta in rust con un metodo che usa i tipi generici, notare come T: Ord, serva per specificare che il tipo T debba avere il trait Ord (interfacce praticamente).
+
+\end{multicols}
+
+
+\begin{multicols}{2}
+\begin{lstlisting}[language=Rust]
+fn binary_search_smallest<T: Ord>(arr: &[T], key: T) -> Option<usize> {
+    let mut low = 0;
+    let mut high = arr.len();
+    let mut ans = None;
+
+    while low < high {
+        let middle = low + (high - low)/2;
+
+        match key.cmp(&arr[middle]) {
+            /* ripartiamo da sinistra per cercare cose più piccole*/
+            std::cmp::Ordering::Equal => {
+                ans = Some(middle);
+                high = middle
+            }
+            std::cmp::Ordering::Less    => high = middle,
+            std::cmp::Ordering::Greater => low = middle + 1,
+        }
+    }
+    ans
+}
+\end{lstlisting}
+
+
+    \columnbreak
+In questa implementazione andiamo a ripartire dal segmento a sinistra quando troviamo la soluzione per cercare la posizione più piccola da trovare.
+
+\end{multicols}
+
+
+
+\begin{multicols}{2}
+\begin{lstlisting}[language=Rust]
+fn binary_search_range<T, F>(l: T, r: T, pred: F) -> Option<T>
+where /* traits */
+    T: Num + PartialOrd + FromPrimitive + Copy,
+    F: Fn(T) -> bool,
+{
+    let mut l = l;
+    let mut r = r;
+
+    let mut ans = None;
+
+    while l < r {
+        let m = l + (r - l) / FromPrimitive::from_u64(2).unwrap();
+
+        match pred(m) {
+            true => {
+                l = m + T::one();
+                ans = Some(m)
+            }
+            false => r = m,
+        }
+    }
+
+    ans
+}
+\end{lstlisting}
+
+
+    \columnbreak
+
+Possiamo usare la ricerca binaria per trovare il risultato di un predicato MONOTONO, per esempio dato $v$ calcolare $\left \lfloor \sqrt{v} \right \rfloor $  usiamo la seguente funzione generalizzata.
+
+Qua usiamo le interfacce per specificare per bene il tipo generalizzato, specifichiamo che il predicato debba essere una funzione che prende il tipo \texttt{T} e ritorna un booleano.
+
+\texttt{T::one()} ritorna il numero che in quel tipo è l’identità ovvero 1 nel caso degli interi. 
+
+\texttt{From primitive::from\_u64}, ritorna l’option di un numero \texttt{u64}. 
+
+Quando non troviamo la risposta andiamo a cercare a sinistra, quando invece la troviamo andiamo a destra a cercare altre risposte più grandi, questo perchè ci vogliamo avvicinare il piu possibile alla risposta.
+
+\end{multicols}
+
+Per usare la binary search per cercare la sqrt di un numero si usa la seguente riga, il predicato ritorna true se $x*x$ è minore o uguale a $v$, e sappiamo che $x^2$ è il contrario della $\sqrt {}$
+
+\begin{lstlisting}[language=Rust]
+fn sqrt_br(v: u64) -> u64 {
+    binary_search_range(0, v + 1, |x| x * x <= v).unwrap()
+}
+\end{lstlisting}
+
+\subsection{Social Distance}
+
+$n = \#$ intervalli.
+
+Trovare $c$ punti all’interno degli intervalli tali che la distanza più PICCOLA $d$ tra i punti consecutivi è massimizzata.
+
+Il risultato è $d$ ovvero la distanza più piccola che abbiamo che però è massimizzata tra i punti consecutivi. 
+
+Esempio dove vediamo che con $c = 3$ abbiamo che la distanza tra 3 punti viene massimizzata utilizzando gli intervalli in questa maniera.
+
+\begin{center}
+\includegraphics[scale=0.3]{Screenshot 2024-02-01 at 15.30.47.png}
+\end{center}
+
+\begin{multicols}{2}
+
+\begin{lstlisting}[language=Rust]
+fn select_intervals(intervals: &mut Vec<(usize, usize)>, c: usize) -> Option<usize> {
+    /* lunghezza */
+    let l = intervals
+      .iter()
+      .fold(0, |acc, interval| acc + interval.1 - interval.0 + 1); 
+
+    if l < c {
+      // there is no solution
+      return None;
+    }
+
+    /* non sono già in ordine? */
+    intervals.sort_unstable();
+
+    /* predicato per la ricerca binaria */
+    let pred = |d: usize| -> bool {
+      let mut last_selected = intervals[0].0;
+      let mut cnt = 1;
+      for &intervallo in intervals.iter() {
+        while intervallo.0.max(last_selected + d) <= intervallo.1 {
+          last_selected = intervallo.0.max(last_selected + d);
+          cnt += 1;
+        }
+      }
+
+      cnt >= c
+    };
+
+    binary_search_range(1, l + 1, pred)
+}
+\end{lstlisting}
+    \columnbreak
+    
+$pred(d')$ = true se e solo se è possibile trovare $c$ punti alla distanza almeno $d'$.
+
+All’interno del predicato per ogni intervallo guardiamo quanti punti possiamo metterci dentro, per cui andiamo a controllare poi in fondo se abbiamo sfiorato o pure no.
+
+In fondo la ricerca binaria, come dall’implementazione di prima, vediamo che cerca di massimizzare il risultato $l$ cercando quindi la distanza minima più grande.
+\end{multicols}
+
+\clearpage
+
+\section{Tree} % (fold)
+Abbiamo diversi modi di fare una tree traversal: 
+
+\begin{center}
+\includegraphics[scale=0.3]{Screenshot 2024-02-01 at 15.34.08.png}
+\end{center}
+
+\subsection{Sum}
+Dato un tree T, vogliamo la somma della key di ogni nodo.
+\begin{lstlisting}[language=Rust]
+/* sum of the nodes of a tree */
+pub fn sum(&self) -> u32 {
+    self.rec_sum(Some(0))
+}
+
+fn rec_sum(&self, node_id: Option<usize>) -> u32 {
+    if let Some(id) = node_id {
+        assert!(id < self.nodes.len(), "Node id is out of range");
+
+        let node = &self.nodes[id];
+        let sum_left = self.rec_sum(node.id_left);
+        let sum_right = self.rec_sum(node.id_right);
+
+        return sum_left + sum_right + node.key;
+    }
+
+    0
+}
+\end{lstlisting}
+
+\subsection{depth}
+\begin{center}
+\includegraphics[scale=0.3]{Screenshot 2024-02-01 at 15.37.13.png}
+\end{center}
+
+\begin{lstlisting}[language=Rust]
+/* print the depth of a three */
+fn depth (&self) -> u32 {
+    self.rec_depth(Some(0),0);
+    0
+}
+
+fn rec_depth(&self, node_id: Option<usize>, d: u32) {
+    if let Some(id) = node_id {
+        assert!(id < self.nodes.len(), "Node id is out of range");
+
+        let node = &self.nodes[id];
+        self.rec_depth(node.id_left, d+1);
+        println!("depth : {d}");
+        self.rec_depth(node.id_right, d+1);
+
+    }
+
+}
+\end{lstlisting}
+
+\subsection{BST}
+Qui dobbiamo controllare che le chiavi  dei nodi rispettino la definizione di BST, per cui, tutto il sotto albero di sinistra sia più piccolo del nodo, e tutto il sotto albero di destra sia più grande.
+
+\begin{lstlisting}[language=Rust]
+    /* check if a tree is a BST */
+    pub fn check_bst(&self) -> bool {
+        self.rec_check_bst(Some(0)).b
+    }
+
+    fn rec_check_bst(&self, node_id: Option<usize>) -> Rescheck {
+        if let Some(id) = node_id {
+            let node = &self.nodes[id];
+            let res_left: Rescheck = self.rec_check_bst(node.id_left);
+            let res_right: Rescheck = self.rec_check_bst(node.id_right);
+
+            if res_left.max > node.key || res_right.min < node.key {
+                return Rescheck {
+                    b: (false),
+                    min: (min_three(node.key, res_left.min, res_right.min)),
+                    max: (max_three(node.key, res_left.max, res_right.max)),
+                };
+            } else {
+                return Rescheck {
+                    b: (res_left.b && res_right.b),
+                    min: (min_three(node.key, res_left.min, res_right.min)),
+                    max: (max_three(node.key, res_left.max, res_right.max)),
+                };
+            }
+        }
+        Rescheck {
+            b: (true),
+            min: (u32::MAX),
+            max: (u32::MIN),
+        }
+    }
+    
+\end{lstlisting}
+
+\subsection{Sum u}
+Dato un albero $T$ , trovare i nodi $u$  tali che la somma delle chiavi dei nodi nel percorso root to $u$, sia uguale alla somma dei nodi nel sotto albero di $u$.
+
+\begin{multicols}{2}
+
+    \begin{center}
+    \includegraphics[scale=0.3]{Screenshot 2024-02-01 at 15.42.46.png}
+    \end{center}
+
+    \columnbreak
+    Implementato come lo pseudo codice, andiamo a tenerci la somma del cammino come argomento, visto che è un informazione che va dall’alto verso il basso, mentre la somma del sotto albero (compreso il nodo corrente) la restituiamo visto che è un informazione che va dal basso verso l’alto, successivamente facciamo il controllo per restituire il risultato corretto di nodi .
+    
+\end{multicols}
+
+\begin{lstlisting}[language=Rust]
+/*  Given a tree , find nodes u such that the sum of the keys of the nodes in the root path to u, is equal to the sum of the nodes in the subtree of u. */
+fn sum_u (&self) -> u32 {
+    self.rec_sum_u(Some(0), 0).res_counter
+}
+
+fn rec_sum_u(&self, node_id: Option<usize>, p_sum: u32) -> Ressum {
+    if let Some(id) = node_id {
+        assert!(id < self.nodes.len(), "Node id is out of range");
+
+        let node = &self.nodes[id];
+        let res_l = self.rec_sum_u(node.id_left, p_sum + node.key);
+        let res_r = self.rec_sum_u(node.id_right, p_sum + node.key);
+        let su = res_l.sub_sum + res_r.sub_sum + node.key;
+
+        let mut res_c = 0;    
+        if su == (p_sum + node.key) {
+            res_c = 1;
+        }
+        let cu = res_l.res_counter + res_r.res_counter + res_c; 
+
+        return Ressum {
+            sub_sum: (su),
+            res_counter: (cu),
+        }
+    }
+
+    Ressum {
+        res_counter: (0),
+        sub_sum: (0),
+    }    
+}
+\end{lstlisting} 
+
+\subsection{MPS}
+Dato un albero dove ogni nodo ha un valore, trovare il percorso di costo massimo da una foglia all’altra.
+\begin{center}
+\includegraphics[scale=0.3]{Screenshot 2024-02-01 at 15.51.10.png}
+\end{center}
+
+\begin{lstlisting}[language=Rust]
+fn mps (&self) -> u32 {
+    self.rec_mps(Some(0)).bsf as u32
+}
+
+fn rec_mps(&self, node_id: Option<usize>) -> Mps {
+    if let Some(id) = node_id {
+        assert!(id < self.nodes.len(), "Node id is out of range");
+        let node = &self.nodes[id];
+        let res_l = self.rec_mps(node.id_left);
+        let res_r = self.rec_mps(node.id_right);
+        let bu = max_threei(res_l.bsf, 
+                            res_r.bsf, 
+                            if (res_l.mps == MIN) || (res_r.mps == MIN) {MIN} 
+                            else {res_l.mps + res_r.mps + (node.key as i32)});
+
+        let mut mu = if (res_l.mps == MIN) && (res_r.mps == MIN) {MIN} 
+        else {cmp::max(res_r.mps, res_l.mps) + (node.key as i32)};
+
+        if mu == MIN {
+            mu = node.key as i32;
+        }
+
+        return Mps {
+            bsf: (bu),
+            mps: (mu),
+        }
+    }
+
+    Mps {
+        bsf: (MIN),
+        mps: (MIN),
+    }  
+}
+\end{lstlisting}
+
+\clearpage
+
+\subsection{Predecessor Problem}
+Dato un insieme $S$ di chiavi, vogliamo dare le seguenti possibilità:
+\begin{multicols}{2}
+\begin{itemize}
+    \item Insert (x)
+    \item Delete (x) 
+    \item Lockup (x)             is $x$ in $S$? 
+    \item Min/Max     
+    \item Predecessor (x)     $max { z \|  z \in S \text{ and } z \le x   }$ 
+    \item Successor (x)        $min  { z \|   z \in S \text{ and } z \ge x  }$ 
+\end{itemize}
+   \columnbreak
+\begin{center}
+\includegraphics[scale=0.3]{Screenshot 2024-02-01 at 16.00.14.png}
+\end{center}    
+\end{multicols}
+
+
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.3]{Screenshot 2024-02-01 at 16.00.30.png}
+\end{center}
+    \columnbreak
+Se un nodo è una foglia si rimuove e basta. Se un nodo ha almeno un solo figlio si elimina e si connette il figlio al posto suo. Se un nodo a 2 figli si elimina, si cambia con il massimo nel suo sub tree di sinistra, 
+Per il successore se se abbiamo il sottoalbero di sinistra, è il min del right subtree. Oppure come nel caso del nodo numero 13, il suo successore è 15, e vediamo come nel caso senza sotto albero destro, si usa il padre, e scorriamo il padre fino a che non troviamo un padre che sia il figlio sinistro del suo padre, cosi sappiamo che sia il suo successore. 
+\end{multicols}
+
+\clearpage
+
+\subsection{Frog And Mosquitos}   
+Target: $\Theta\left( (n+m) \cdot \log (n+m) \right)$
+
+$n$ rane nell'asse delle $x$:
+
+
+Ogni rana $i$ ha un valore $t_i$ che è la lunghezza della sua lingua,$m$ mosche iniziano a posarsi sull’asse delle $x$, ogni mosca $j$ si posa nella posizione $b_j$ e ha un valore di $a_j$ che è la sua grandezza.
+
+
+Una rana $i$ mangia una $j$:
+\begin{enumerate}
+    \item Se la mosca $b_j$ è dentro la distanza $t_j$ da $x_i$ 
+    \item Se la rana $i$ mangia la mosca $j$ allora $t_i = t_i + a_j $
+    \item Se due o piu rane possono mangiare una mosca, allora la mangia la più distante 
+\end{enumerate}
+
+\begin{itemize}
+    \item Input: Prima riga contiene $n$ e $m$ ovvero quante rane e quante mosche, successivamente ci sono $n$ righe, ognuna la posizione $i$ della  esima rana $x_i$ e la lunghezza della sua lingua $t_j$, successivamente ci sono $m$ righe contenenti la posizione $b_j$ e la grandezza della mosca $a_j$.
+    \item Output: Scrivere $n$ righe, dove ogni riga ha quante mosche ha mangiato la $i$ esima rana e quanto la sua lingua è lunga. 
+\end{itemize}
+
+\underline{Molto difficile}: una soluzione sarebbe di usare un BST, si va a calcolare quanto  
+
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot 2024-02-05 at 11.07.02.png}
+\end{center}
+
+    \columnbreak
+
+Andiamo a prendere le rane $x_i$, le mettiamo un bst, per ogni mosca $b_j$ andiamo a calcolare il predecessor($b_j$), ma questo non ci porta al risultato vero visto che la lignua delle rane è differente.
+    
+\end{multicols}
+
+
+Per risolvere questi problemi andiamo a fare 3 step:
+
+\begin{enumerate}
+    \item \textbf{Issue 1}: 
+        \begin{multicols}{2}
+            \begin{center}
+            \includegraphics[scale=0.2]{Screenshot 2024-02-05 at 11.50.07.png}
+            \end{center}
+            \columnbreak
+            Togliamo i segmenti che vanno a overlapparsi. 
+        \end{multicols}
+
+    \item \textbf{Issue 2}:
+        \begin{multicols}{2}
+            \begin{center}
+            \includegraphics[scale=0.2]{Screenshot 2024-02-05 at 11.51.25.png}
+            \end{center}
+            \columnbreak
+            Visto che la grandezza delle lingue è dinamica dobbiamo andare a gestire 3 casi diversi.
+        \end{multicols}
+
+
+    \item \textbf{Issue 3}: 
+        \begin{multicols}{2}
+            \begin{center}
+            \includegraphics[scale=0.2]{Screenshot 2024-02-05 at 11.55.45.png}
+            \end{center}
+            \columnbreak
+            Molte mosche potrebbero non essere mangiate per un po' visto che le rane non è detto che gia da subito abbiano la lunghezza della lingua sufficiente a mangiare tutte le mosche.        \end{multicols}
+
+\end{enumerate}
+
+
+
+
+
+
+\clearpage
+
+\subsection{Two Pointer Trick} 
+Proble: \textbf{Longest k-good Segment}
+Dato un array $A[1,n]$ di valori e un valore $k$, un sub'array è chiamato \texttt{k-good} se contiene al massimo $k$ valori differenti. Trovare il più grande \texttt{k-good} segment.
+
+
+Si usano due puntatori per rappresentare una finestra di lunghezza variabile.
+
+
+\begin{center}
+\includegraphics[scale=0.3]{Screenshot 2024-02-05 at 15.27.00.png}
+\end{center}
+
+Si usano due puntatori per tenere traccia della window corrente di lunghezza variabile, in base a se la finestra è valida oppure no, spostiammo la posizione dei puntatori. Andiamo grazie ad un BST a tenere conto di quante occorrenze ci sono degli elementi nella finestra. Il primo puntatore sta all'inizio e il secondo sta alla fine. 
+Spostiamo il puntatore a sinistra quando la finestra non è valida, spostiamo il puntatore di destra quando la finestra è valida.
+
+
+
+(il prof dice che è talmente semplice che non servono nemmeno le note, ma comunque non ci ho capito un sega e lui non ha spiegato un cazzos)
+Visto che ci devono essere nella finestra solo 2 
+
+
+Time complexity: $\Theta (n \log k) $ con un BST, $\theta (n^k)$ con un array, $\theta (n)$ con hashing, quindi se dobbiamo tenere conto del tempo si usa un array.
+
+
+\clearpage
+\section{Sweep Line Alogritm} 
+E' un algoritmo usato per risolvere problemi nella retta e nel piano.
+
+\subsection{Maximum Number of Overlapping Intervals}
+Ci viene dato un set di $n$ intervalli $[s_i,e_i]$ su una linea.
+Diciamo che un due intervalli $[s_i,e_i]$ e $[s_j,e_j]$ si sovrappongono se e solo se la loro intersezione non è il set vuoto, ovvero se esiste almeno un punto $x$ che appartiene a entrambi.
+
+
+L'obbiettivo è di calcolari il massimo numero di intervalli che si sovrappongono
+
+\begin{center}
+\includegraphics[scale=0.3]{Screenshot 2024-02-05 at 15.57.03.png}
+\end{center}
+
+L'algoritmo si basa sul fatto di tenere questa \textbf{sweep line}, che è solamente una linea immaginaria verticale, e ci manteniamo via via lo stato dell'algoritmo.
+
+
+Questa linea la muoviamo solo in determinati punti delle $x$, solo dove potremmo avere dei punti di maggior interesse, come fa la linea nella figura seguente:
+
+\begin{center}
+\includegraphics[scale=0.3]{Screenshot 2024-02-05 at 16.01.53.png}
+\end{center}
+
+Notare come per esempio nel punto 1 o 6 non andiamo.
+
+
+\begin{lstlisting}[language=Rust]
+#[derive(PartialOrd, Ord, PartialEq, Eq, Debug)]
+enum Event {
+    Begin,
+    End,
+}
+
+pub fn max_overlapping(intervals: &[(usize, usize)]) -> usize {
+
+    println!("intervals {:?}",intervals);
+
+    let mut pairs: Vec<_> = intervals
+        .iter()
+        .flat_map(|&(b, e)| [(b, Event::Begin), (e, Event::End)])
+        /*è una map che appiattisce i risultati di una map normale,
+          infatti in questo caso restituiamo per ogni elemento che troviamo,
+          le coppie di usize, un array con le coppie con end e begin,
+          in questa maniera con flatmap e collect si crea un array unico.*/
+        .collect();
+
+    pairs.sort_unstable();
+    /* sorting per ordinare le coppie in base al primo valore come sempre */
+
+    pairs
+        .into_iter() //
+        .scan(0, |counter, (_, kind)| {
+            if kind == Event::Begin {
+                *counter += 1;
+            } else {
+                *counter -= 1;
+            }
+            Some(*counter)
+        })
+        /*lo scan è come una map ma si porta dietro un conter, e se usiamo collect,
+        * restituisce tanti valori, mentre in questo caso si usa per trovare il massimo
+        * tra tutti questi che restituisce  */
+        .max()
+        .unwrap()
+}
+\end{lstlisting}
+
+
+
+In questa implementazione andiamo a creare un array di coppie, con ogni coppia l'inizio e la fine di ogni segmento (usando l'enum), dopo andiamo ad ordinarli in ordine crescente, dopo di che con la scan andiamo a tenere un contatore che decrementa quando troviamo un end e cresce quando troviamo un begin, in questa maniera andiamo a tenere il conto sempre del numero corrente dei segmenti in quello specifico punto della retta (in questo caso sempre o l'inizio o la fine di un segmento) e restituiamo solamente il massimo.
+
+\subsection{Closest Pair of Points}
+Un set di $n$ punti nel piano, l'obbiettivo e di trovare la coppia di punti più vicina.
+
+
+La distanza tra due punti è $d((x_1,y_1),(x_2,y_2)) = \sqrt{(x_1 - x_2)^2 + (y_1 - y_2)^2}$.
+
+
+Un algoritmo brute force ci mette $\Theta (n^2)$ 
+
+
+Un algortimo piu veloce sfruttando la sweep line, sortiamo in ordine crescente i punti in base alla $x$, teniamo conto della distanzia piu piccola chiamandola $\delta$.  
+
+
+\begin{multicols}{2}
+    \begin{center}
+    \includegraphics[scale=0.4]{Screenshot 2024-02-05 at 17.49.45.png}
+    \end{center}
+    \columnbreak
+    Mettiamo caso che abbiamo una $\delta$, sicuramente se andiamo a prendere un punto $(x,y)$, tutti i punti che sono più vicino a $x$ di $\delta$ avranno sicuramente le cordinate comprese tra $[x-\delta,x]$ e $[y-\delta,y+\delta]$. 
+\end{multicols}
+
+
+L'algoritmo tiene tutti i punti che servono ordinati per le $y$ in un BST, il quale all'inizio è vuoto, processiamo uno alla volta $p=(x,y)$, e per ogni $p$ all'interno del set (BST) andiamo a iterare sui punti che hanno la coordinata $y$ tra $[y-\delta,y+\delta]$, e rimuoviamo quelli dentro a questo intervallo con la cordinata $x$ minore di $x - \delta$, 
+
+
+\begin{lstlisting}[language=Rust]
+pub fn distance_squared(p: (i64, i64), q: (i64, i64)) -> i64 {
+    (p.0 - q.0).pow(2) + (p.1 - q.1).pow(2)
+}
+
+use std::collections::BTreeSet;
+use std::ops::Bound::Included;
+
+// Returns the (squared) Euclidean distance between the closest pair of 
+// points in `points`
+pub fn closest_pair(points: &mut [(i64, i64)]) -> Option<i64> {
+    if points.len() < 2 {
+        return None;
+    }
+
+    points.sort_unstable_by_key(|p| (p.1, p.0)); // sort by y
+
+    let min_y = points[0].1;
+    let max_y = points.last()?.1;
+
+    /* first delta */
+    let mut delta = distance_squared(points[0], points[1]);
+
+    let mut set: BTreeSet<(i64, i64)> = BTreeSet::new();
+    for &point in points.iter() {
+        /* We remove all the point in the set that have the y in [y-\delta,y+\delta] 
+         * and have the x coordinate smaller than x-\delta 
+         */ 
+        let to_delete: Vec<_> = set
+            .range((
+                Included(&(point.0 - delta, min_y)),
+                Included(&(point.0 + delta, max_y)),
+            ))
+            .filter(|p| p.0 - delta >= point.0)
+            .cloned()
+            .collect();
+
+        // Remove those points
+        for p in to_delete {
+            set.remove(&p);
+        }
+
+        /* Search again in the same point that have the y in the [y-\delta,y+\delta] 
+         * and we compute the distances with survived points.
+         * Update delta if needed */
+        delta = set
+            .range((
+                Included(&(point.0 - delta, min_y)),
+                Included(&(point.0 + delta, max_y)),
+            ))
+            /* fold is like scan but return only one result, and in this case we initialize the 
+             * counter with delta, for take the minimum
+             * */
+            .fold(delta, |acc, &p| acc.min(distance_squared(point, p)));
+
+        set.insert(point);
+    }
+
+    Some(delta)
+}
+\end{lstlisting}
+
+

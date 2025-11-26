@@ -1,0 +1,399 @@
+\section{Prefix Sum}
+Dato un array $A[1,n]$ di interi, vogliamo supportare le seguenti operazioni:
+
+\begin{multicols}{2}
+\begin{itemize}
+    \item $\text{sum}(i) = \sum_{k=1}^i A[k] $
+    \item $\text{RangeSum}(i,j) = \sum_{k=i}^j A[k]$
+\end{itemize}
+    \columnbreak
+    \begin{center}
+    \includegraphics[scale=0.2]{Screenshot 2024-02-07 at 12.11.39.png}
+    \end{center}
+\end{multicols}
+
+
+Per risolvere questo usiamo l'array $P$ dove $P[i] = \sum_{k=1}^i A[k]$, in questa maniera la query di \texttt{sum} viene risolta di $\Theta (1)$.
+
+\begin{center}
+\includegraphics[scale=0.3]{Screenshot 2024-02-07 at 12.13.42.png}
+\end{center}
+
+Per calcolare per esempio il $\text{RangeSum}(j,j) = P[i] - P[i - 1]$, e infatti per esempio $\text{RangeSum}(2,6) = P[6] - P[1] = 17 - 2 = 15$
+
+\begin{lstlisting}[language=Rust]
+let a = vec![2, 4, 1, 7, 3, 0, 4, 2];
+
+let psums = a
+    .iter()
+    .scan(0, |sum, e| {
+        *sum += e;
+        Some(*sum)
+    })
+    .collect::<Vec<_>>();
+
+assert!(psums.eq(&vec![2, 6, 7, 14, 17, 17, 21, 23]));
+\end{lstlisting}
+
+\subsection{Ilya and Queries}
+Data una stringa binaria  $S[1,n]$, che consiste sono il \textbf{a} e \textbf{b}, e un insime di $m$ queries, allora: 
+
+$$
+q(i,j) = \text{ ritorna il numero di posizioni } k \in [i,j] \text{ tali che } S[k] = S[k+1] 
+$$
+
+\begin{center}
+\includegraphics[scale=0.3]{Screenshot 2024-02-07 at 12.29.52.png}
+\end{center}
+
+\begin{center}
+\includegraphics[scale=0.3]{Screenshot 2024-02-07 at 12.31.30.png}
+\end{center}
+
+Faccio solo uno screen, tanto è il range sum applicato a questo problema, non capisco perche l'array B ma comunque conta solo se la q è rispettata.
+
+\begin{lstlisting}[language=Rust]
+struct Ilya {
+    psums: Vec<usize>,
+}
+
+impl Ilya {
+    pub fn new(s: &str) -> Self {
+        let psums = s
+            .as_bytes()
+            .windows(2)
+            .map(|w| if w[0] == w[1] { 1usize } else { 0usize })
+            .scan(0, |sum, e| {
+                *sum += e;
+                Some(*sum)
+            })
+            .collect::<Vec<_>>();
+
+        Self { psums }
+    }
+
+    pub fn q(&self, i: usize, j: usize) -> usize {
+        assert!(i < j);
+        assert!(j <= self.psums.len());
+
+        self.psums[j - 1] - if i != 0 { self.psums[i - 1] } else { 0 }
+    }
+} 
+\end{lstlisting}
+
+
+\subsection{Little Girl and Maximum}
+Dato un array $A[1,n]$ e un set $Q$ di $q$ queries, ogni $q$ è una range sum queries da $i$ a $j$ e ritorna la somma di $A[i..j]$
+
+
+L'obbiettivo è quello di permutare i valori di $A$ per massimizzare la somma dei risultati delle query di $Q$.
+
+\begin{center}
+\includegraphics[scale=0.3]{Screenshot 2024-02-07 at 12.44.25.png}
+\end{center}
+
+\underline{Notare:} un idea iniziale è assegnare i valori piu grandi nelle posizioni accedute da piu query possibili, quindi ordinare in ordine decrescente, e ordinare gli index di $A$ in ordine decrecente in base al numero di accessi a una determinata posizione, questa cosa costa $\Theta (n \log n)$ dopo che abbiamo computato le freuquenze negli index, il problema è fare questa cosa.
+
+Ovvero costruire l'array $F[1,n]$ dove $F[i]$ è il numero di volte che l'index $i$ appartiene ad una query di $Q$. 
+
+Potremmo usare lo sweep line algoritm per fare questo, visto che le query sono dei segmenti, e calcolare le frequenze si basa sul calcolare quanti segmenti sono in overlap su quel singolo punto basterebbe usare l'algoritmo discusso precedentemente, il che avrebbe costo $\Theta (q \log q)$.
+
+
+Esiste tuttavia una soluzione che sfrutta la prefix sum, si basa tutto sul costruire un array $U[1..n]$ tale che le sue prefix sum sono uguali al nostro array target $F$r., 
+
+
+Inizialmente tutto $U$ è $ = 0$, per una query $(l,r)$ si aggiunge facciamo $U[l] += 1$ e $U[r+1] += 1$.
+
+In questa maniera la prefix sum di $U[i]$ rispetta la frequenza degli index di $F$, perche la perefix sum rimane invariata per indici inori di $l$, aumentata di $1$ per indici compresi tra $l$ e $r$, e di nuovo invariata per indici maggiori di $r$.
+
+\clearpage
+
+\begin{lstlisting}[language=Rust]
+// We assumes queries are 0-based indexed
+pub fn little_girl(a: &[i64], q: &[(usize, usize)]) -> i64 {
+    if a.is_empty() {
+        return 0;
+    }
+
+    let mut u = vec![0i64; a.len()];
+
+    for &(l, r) in q {
+        assert!(l <= r);
+        assert!(r < u.len());
+
+        u[l] += 1;
+        if r + 1 < u.len() {
+            u[r + 1] -= 1;
+        }
+    }
+
+    let mut f = u
+        .iter()
+        .scan(0, |sum, e| {
+            *sum += e;
+            Some(*sum)
+        })
+        .collect::<Vec<_>>();
+
+    // we sort both f and a in decreasing order, nothing changes
+    f.sort_unstable();
+    let mut a_sorted = a.to_vec();
+    a_sorted.sort_unstable();
+
+    a_sorted
+        .iter()
+        .zip(f)
+        .fold(0, |result, (value, freq)| result + value * freq)
+}
+    
+\end{lstlisting}
+
+\subsection{Number of Ways}
+Dato $A[1,n]$, contare quante volte possiamo splittare $A$ in 3 parti tali che la somma di queste tre parti è la stessa tra tutte e tre.
+
+
+Chiamiamo $S$ la somma di tutti i valori di $A$, se sicuramente se S non è divisibile per 3 la soluzione non esiste. 
+
+
+Creaiamo una array $C$ che tiene nella posizione $i$ esima il numero dei valori (PARTENDO DA N, QUINDI AL CONTRARIO, SUFFISSI VUOL DIRE LA PARTE FINALE DIO IMPIEGATO), dentro $A[i..n]$ che hanno la loro somma con $S/3$.
+
+
+Dopo di che da sinistra a destra facciamo al predix sum di $A$, e ogni volta che la prefix sum nella posizione $i$ è uguale a $S/3$ andiamo a sommare $C[i+2]$.
+
+
+Questo perchè la parte $A[1..i]$ a somma $S/3$ e può essere combinato con qualsiasi coppia della parte $A[i+1 .. n]$ tanto tutti e due hanno la somma $S/3$. Visto che $A[i+1 .. n]$
+
+
+\begin{lstlisting}[language=Rust]
+pub fn number_of_ways(a: &[i64]) -> usize {
+    let sum: i64 = a.iter().sum();
+
+    if sum \% 3 != 0 {
+        return 0;
+    }
+
+    let target = sum / 3;
+    let mut c: Vec<_> = a
+        .iter()
+        .rev()
+        .scan(0, |sum, e| {
+            *sum += e;
+            Some(*sum)
+        })
+        .scan(0, |counter, sum| {
+            if sum == target {
+                *counter += 1usize
+            };
+            Some(*counter)
+        })
+        .collect();
+
+    c.reverse();
+
+    let mut result = 0;
+    let mut sum = 0;
+    for (i, &v) in a[..a.len() - 2].iter().enumerate() {
+        sum += v;
+        if sum == target {
+            result += c[i + 2];
+        }
+    }
+
+    result
+}
+\end{lstlisting}
+
+\clearpage 
+
+\section{Fenwick Tree}
+Dato un array $A[1,n]$ vorremmo supportare le seguenti operazioni:
+
+\begin{itemize}
+    \item $\text{Sum}(i) = \sum_{k=1}^i A[k] $
+    \item $\text{Add}(i,v) = A[i] += v $
+\end{itemize}
+
+Possiamo provare con un pò di soluzioni inutili, tipo usare un array brutto, e quindi la \texttt{Sum(i)} richiede $\Theta (n)$ e invece \texttt{add(i,v)} richiede $\Theta (1)$, mentre se usassimo un array di prefix sum di $A$, allora sarebbe il contrario, la somma chiederebbe $\Theta (1)$ tempo mentre la add chiederebbe $\Theta (n)$.
+
+
+\underline{Notare:} con il fenwick Tree si fanno tutte queste operazioni in $\Theta (\log n)$, notare inoltre che il fenwick tree è una data structure \textbf{implicita}, questo perche richiede solamente  $\Theta (1)$, di spazio per essere oltre all'array $A$ per essere usata.
+
+
+Per iniziare a spiegare questa struttura dati, vediamo una versione del problema \underline{rilassata}, ovvero cerchiamo di risolvere solamente la sum, e solo per gli indici delle potenze di 2, quindi nell'array che vedremo saranno solo 1,2,4 e 8.
+
+
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.4]{Screenshot 2024-02-08 at 10.35.25.png}
+\end{center}
+   
+\columnbreak
+
+Vediamo il fenwick tree associato a questo problema, dove in ogni nodo troviamo al prefix sum che viene richiesta da quella query, infatti il nodo 4, ha il risultato della prefix sum da $1$ a $4$. 
+In questa maniera la $sum(i)$ si risolve accedendo semplicemente il nodo $i$, ovviamente solo per $i$ potenze di $2$.
+Per risolvere la $add(i,v)$ basta semplicemente aggiornare i nodi che contengono l'index $i$, infatti se dovessimo fare $add(3,10)$ dovremmo aggiungere $10$ ai nodi $4$ e $8$.
+\end{multicols}
+
+
+\underline{Notare}: sum richiede $\Theta (1)$ mentre add richiede  $\Theta (\log n)$
+
+
+Il prof per spiegare come si creano piu livelli dell'albero nelle note fa un bel casino, mentre in classe spiegò solo la seguente immagine: 
+
+\begin{multicols}{2}
+\begin{center}
+    \includegraphics[scale=0.25]{Screenshot 2024-02-08 at 13.19.57.png}
+\end{center}
+   
+    \columnbreak
+
+In questa maniera, abbiamo un livello per ogni set di numeri con uno specifico numero di uni nella rappresentazione dei bit.
+Inoltre si vede come la rappresentazione alla fine del fenwick tree non sia altro che un array, di lunghezza uguale all'array (il prof dice $n+1$ ma non capiscooooo).
+
+Notare come abbiamo la prefic sum solo di alcuni subset 
+
+Notare inoltre come è possiibile usare solamente il fenwick tree, visto che si possono comunque ricavare i valori precedenti, usando l'operazione $A[i] = sum(i) - sum(i-1)$.
+\end{multicols}
+
+
+Adesso vediamo come rispondere alle query di Sum e Add.
+
+\begin{itemize}
+    \item \texttt{Sum(i)}: per calcolarla basta andare al nodo \texttt{i}, e da quel nodo andare attraverso i parent al nodo radice, quindi dobbiamo implementare la \texttt{parent(i)}, e il costo è $\Theta (\log n))$
+
+    \item \texttt{Parent(i)}: per calcolarlo si rimuove il \textbf{trailing one} del figlio, ovvero l'uno nella rappresentazione binaria più a destra (piu piccolo), e questo 1 possiamo isolarlo facendo $k = i\&-i$ (questo perche la rappresentazione in negativo dei binari è in complemento a 2, ovvero negato del numero + 1)  e quindi basta fare $i - k$ per avere il geno
+        itore di $i$.
+
+        \clearpage
+
+    \item \texttt{Add(i,v)}: dobbiamo risolvere il problema di aggiornare
+        \begin{multicols}{2}
+            \begin{center}
+            \includegraphics[scale=0.3]{Screenshot 2024-02-08 at 15.37.47.png}
+            \end{center} 
+            \columnbreak
+            Un esempio dei nodi da aggiornare se dovessimo fare la \texttt{add(5,\_)}, vediamo come si devono aggiornare i nodi alla desdtra della $i$ e i nodi genitori sempre alla sua destra.
+
+            Per fare questo possiamo notare come tutti i nodi da aggiornare non sono altro che il nodo corrente, sommato al suo trailing one, quindi come per il genitore l'operazione da fare, è $k = i\&-i$ e $i + k$.
+            
+        \end{multicols}
+\end{itemize}
+
+
+Un esempio di impleemntazione in rust:
+\begin{lstlisting}[language=Rust]
+#[derive(Debug)]
+pub struct FenwickTree {
+    tree: Vec<i64>,
+}
+
+impl FenwickTree {
+    pub fn with_len(n: usize) -> Self {
+        Self {
+            tree: vec![0; n + 1],
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.tree.len() - 1
+    }
+
+    /// Indexing is 0-based, even if internally we use 1-based indexing
+    pub fn add(&mut self, i: usize, delta: i64) {
+        let mut i = i + 1; 
+        assert!(i < self.tree.len());
+
+        while i < self.tree.len() {
+            self.tree[i] += delta;
+            i = Self::next_sibling(i);
+        }
+    }
+
+    /// Indexing is 0-based, even if internally we use 1-based indexing
+    pub fn sum(&self, i: usize) -> i64 {
+        let mut i = i + 1;  
+
+        assert!(i < self.tree.len());
+        let mut sum = 0;
+        while i != 0 {
+            sum += self.tree[i];
+            i = Self::parent(i);
+        }
+
+        sum
+    }
+
+    pub fn range_sum(&self, l: usize, r: usize) -> i64 {
+        self.sum(r) - if l == 0 { 0 } else { self.sum(l - 1) }
+    }
+
+    fn isolate_trailing_one(i: usize) -> usize {
+        if i == 0 {
+            0
+        } else {
+            1 << i.trailing_zeros()
+        }
+    }
+
+    fn parent(i: usize) -> usize {
+        i - Self::isolate_trailing_one(i)
+    }
+
+    fn next_sibling(i: usize) -> usize {
+        i + Self::isolate_trailing_one(i)
+    }
+} 
+\end{lstlisting}
+
+\subsection{Counting Inversions in an Array}
+Dato un array $A[1,n]$ di $n$ interi positivi, contare il numero di inversioni di $A$. 
+
+
+Se $1 \le i < j \le n$ e $A[i] > A[j]$ allora si chiama \textbf{inversione} di $A$.
+
+
+Esempio: \texttt{A=321654} dove $\#$inversions$=6$, ovvero $(3,1)\, (3,2)\, (5,4)\, (6,5)\, (6,4)$
+
+
+\begin{center}
+\underline{Target solution}: $\Theta(n \log n)$
+\end{center}
+
+
+Se i valori sono $\Omega(n)$, quindi superano di valore la dimensione dell'array, possiamo rimapparli per essere in $[1,n]$, e vogliamo tenerci sempre il loro ordine relativo nell'array cosi fa fare il discorso del $i<j$, si sortano in ordine crescente, e si sostituisce al valore il suo rank nell'array ordinato .
+
+
+Per esempio $A = 42\, 20 \, 10 \, 100$ diventa $A_{\text{remap}} = 3\, 2 \, 1 \, 4$ 
+
+
+\begin{lstlisting}[language=Rust]
+pub fn counting_inversions(a: &[u64]) -> usize {
+    if a.is_empty() {
+        return 0;
+    }
+
+    let max = *a.iter().max().unwrap() as usize;
+    let mut ft = FenwickTree::with_len(max + 1);
+
+    let mut count: usize = 0;
+    for &e in a {
+        count += ft.range_sum((e + 1) as usize, max) as usize;
+        ft.add(e as usize, 1);
+    }
+
+    count
+}
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+
+
+
