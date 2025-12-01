@@ -933,73 +933,354 @@ Abbiamo il nostro query range che va a 3 a 6, e vediamo che ogni distinct elemen
 
 \begin{multicols}{2}
 \begin{center}
-    \fbox{\begin{minipage}[c][2.8cm]{\linewidth}\centering \tiny \textbf{IMG MANCANTE} \\ Screenshot\_20251119\_200501.png\end{minipage}}
+\includegraphics[scale=0.2]{Screenshot_20251129_111855.png}
 \end{center}
+
 \columnbreak
 Quindi sapendo questa cosa, basta usare l'array P di pointer e cerchiamo in maniera ricorsiva i numeri piu piccoli del min della range query. E ci si ferma quando si trova numeri piu grossi di 3, perche tanto no freca, particamente si fanno RMQ nell'array P e ricorsivamente si crea il cartesian tree dei range, e non si va ricorsivamente giu, ma si va ricorsivamente a destra e a sinistra, e si fa solamente la ricorsione per elementi minori di 3, se ne perde 2 piu o meno per ognuno quindi siamo sempre nell'ordine di k.
 \end{multicols}
 
 Bella merda ho scritto ma si capisce dai su.
 
+\subsection{Range Minimum Querys}
+Abbiamo un array e si chiede di reportare gli elementi piu piccoli di un certo $k$: 
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251129_112649.png}
+\end{center}
+\columnbreak 
+Abbiamo l'array e sicuro dobbiamo riportare 1 e 2, si inizia e si chiede il minimo di tutto l'array, allora si fa una ricorsione a sinistra e destra e si continua cosi a chiedere il minimo, e ci si ferma ovviamente quando il minimo è piu grande o uguale a $k$.
+\end{multicols}
+
+Quanto costa? si sta costruendo un cartesian tree quindi comuqnue $O(k)$
+
+\section{Dynamic Programming}
+\subsection{Fibonacci Numbers}
+Riusiamo tutto quello che abbiamo gia fatto godendo nel mentre.
+
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251129_113221.png}
+\end{center}
+
+Si fa schifo questo algoritmo, ci teniamo le risposte in una tabella e si risponde continuamente.
+
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251129_113341.png}
+\end{center}
+\columnbreak
+\textbf{TOP DOWN APPROAC}: Ci teniamo la tabella M inizializzata a 0. 
+\end{multicols}
+
+Possiamo anche avere un bottom down approach cercando di fare un algoritmo piu veloce:
+
+\subsection{Matrix Exponentiation}
+Dobbiamo fare $A^n$, si fa divide and conquer, sappiamo che:
+
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251129_120738.png}
+\end{center}
+
+\subsection{Rod Cutting}
+Abbiamo una barra di acciaio, di lunghezza $n$ per un taglio di lunghezza $i \in [1,n]$  si prende $P_i$ euros, e vogliamo massimizzare il guadagno, ovvero trovare i cuts che massimizzano la revenue totale. 
+
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251130_121511.png}
+\end{center}
+
+Soluzione: quali sono i sub problems? solamente smaller input, quindi qui è : Optimal way to cut a rod of length K < n. 
 
 
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_091737.png}
+\end{center}
+\columnbreak
+Combine: $R(n) = \max _{1 \le i < n} \{R(n-1) +  P_i\}$ ovvero facciamo il sub problem e andiamo avanti restringendo $i$. 
+\end{multicols}
+
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_093113.png}
+\end{center}
+\columnbreak
+Prima si inizializza la tabella dei total revenie, poi per ogni i a n+1 e per ogni l in che va fino ad i, si prende il massimo tra quello che c'è ora e toglie tutti gli i.  $R[i-l] + P[l]$ ovvero tutti i possibili tagli da fare in quel pezzo di $i$.
+\end{multicols}
+
+\subsection{facebook: Robber}
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_093457.png}
+\end{center}
+\columnbreak
+Sei in strada,  e ci sono n case, possiamo rubare la casa e prendere la revenue $r_n$, ma c'è un costraint,  se si ruba la casa $i$ non si può rubare in $i-1$ e $i+1$. 
+\end{multicols}
+
+Ci serve un tool: 
+\subsubsection{shortest/longest path computation on a DAG}
+Si definiscono dei nodi speciali, \textbf{Source} e \textbf{Destination}, si attacca a tutti la source e arrivano tutti alla destination, abbiamo la wheight $w_{i,j}$ (il costo) e quindi vogliamo trovare il path dalla source alla destination con il massimo dei pesi oppure il minimo non importa. 
+
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_094101.png}
+\end{center}
+
+Si usa l'algoritmo di dijikistra, abbiamo un heap e ci si mette U nodi dentro con il loro costo, e si estrae quello con costo minore, e si rilassano tutti gli edges che escono da quello, non ci ho capito una sega. costo numero di nodi + numero di archi per log n visto che si parla di heap. 
+
+Ma c'è un'altro modo, senza heap, perche se si processano i nodi fino ad arrivare al nodo $i$ in ordine, gli altri non si cagano, questo perche in un DAG tutti gli archi che arrivano ad $i$ si sono gia processati, mentre quelli a destra di $i$ ancora non si sono cagati, allora cosa si fa? 
+
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_095706.png}
+\end{center}
+\columnbreak
+Si tiene il costo dello shortest path per arrivare a quel nodo $c_i$, inizialmente sono tutti $\infty$, e step by step si computa lo shortest past da sinistra a destra. Per ogni vertex che si processa, si rilassano tutti i vertici. 
+\end{multicols}
 
 
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_095924.png}
+\end{center}
+\columnbreak
+Ovvero se $i,j$ è un edge, allora il costo per andare a $j$, diventa il minimo tra il costo di $c_j$ e $c_i+w_{i,j}$, e da sinistra a destra si fa questo calcolo e visto che le wheight sono sempre positive, gasse. Traduzione: "Al nodo j conviene tenersi il costo che aveva prima, o arrivarci passando da me (i)?"
+\end{multicols}
+
+\subsubsection{Road cutting: ma con il DAG}
+Si fa il dag con un nodo per ogni cut, e tutti i nodi sono connessi a tutti quelli dopo, e come revenue il guadagno da 1 a $i$ è $P_{i-1}$
+
+Di nuovo numero di edge piu numero di vertex, quindi sempre quadratico in questo coso brutto.
+
+Esempio da gemini: 
 
 
+Il problema consiste nel massimizzare il profitto tagliando un'asta di lunghezza $N=4$. Modelliamo il problema come la ricerca del cammino a costo massimo (Longest Path) su un DAG, dove i nodi rappresentano i punti di taglio ($0 \to 4$) e gli archi rappresentano i pezzi venduti.
 
+\paragraph{Dati di Input}
+I prezzi per i tagli sono:
+\begin{itemize}
+    \item Taglio da 1m: $1$€
+    \item Taglio da 2m: $5$€ (Pezzo pregiato)
+    \item Taglio da 3m: $8$€
+    \item Taglio da 4m: $9$€
+\end{itemize}
 
+\paragraph{Logica dell'Algoritmo}
+Poiché il grafo è un DAG, processiamo i nodi linearmente da sinistra a destra (da 0 a 4). Utilizziamo la formula di rilassamento per massimizzare il profitto:
+\[ DP[j] = \max(DP[j], \quad DP[i] + P_{(j-i)}) \]
+In pratica, per ogni nodo, controlliamo se conviene arrivare lì estendendo un percorso precedente.
 
+\bigskip
+\noindent \textbf{Esecuzione Step-by-Step}
 
+\textbf{1. Inizializzazione al Nodo 0 (Source)} \\
+L'array dei profitti parte vuoto (o a $-\infty$), eccetto la sorgente.
+Dal nodo 0 lanciamo gli archi verso tutti i nodi futuri:
+\begin{itemize}
+    \item Verso 1: $0 + 1€ = 1$
+    \item Verso 2: $0 + 5€ = 5$
+    \item Verso 3: $0 + 8€ = 8$
+    \item Verso 4: $0 + 9€ = 9$
+\end{itemize}
+\textit{Stato Array:} $[0, \mathbf{1}, \mathbf{5}, \mathbf{8}, \mathbf{9}]$
 
+\medskip
 
+\textbf{2. Processiamo il Nodo 1 (Profitto attuale: 1)} \\
+Proviamo ad estendere il percorso partendo dal nodo 1:
+\begin{itemize}
+    \item Verso 2: $1 + 1€ = 2$. (Minore di 5, ignoro)
+    \item Verso 3: $1 + 5€ = 6$. (Minore di 8, ignoro)
+    \item Verso 4: $1 + 8€ = 9$. (Uguale a 9, ignoro)
+\end{itemize}
+\textit{Nessun miglioramento.}
 
+\medskip
 
+\textbf{3. Processiamo il Nodo 2 (Profitto attuale: 5)} \\
+Qui avviene il rilassamento cruciale (il sorpasso):
+\begin{itemize}
+    \item Verso 3: $5 + 1€ = 6$. (Minore di 8, ignoro)
+    \item Verso 4: $5 + 5€ = 10$. (Maggiore di 9! \textbf{Aggiorno})
+\end{itemize}
+\textit{Stato Array:} $[0, 1, 5, 8, \mathbf{10}]$
 
+\bigskip
+\noindent \textbf{Conclusione} \\
+Arrivati alla fine, il profitto massimo accumulato al nodo 4 è \textbf{10€}. \\
+Il percorso vincente sul DAG è: $0 \xrightarrow{+5} 2 \xrightarrow{+5} 4$, che corrisponde a due tagli da 2 metri ciascuno.
 
+\subsubsection{Torniamo a faceboooooook}
+Come si fa con il dag? Se abbiamo un arco che arriva vuol dire che si deve rubare, ma non si puo andare nella casa dopo. sempre $\Theta(n^2)$ time 
 
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_102951.png}
+\end{center}
 
+Consideriamo anche che possiamo togliere degli edge, questo perche non ha senso andare da i a $i+4$, perche possiamo prima andare a $i+2$ e poi si va a $i+4$ in questra maniera abbiamo solamente 2 archi che escono da ogni nodo e quindi $\Theta(n)$
 
+\subsection{Snake and ladders} 
+Abbiamo una matrice, si inizia dalla cella 1 e dobbiamo raggiungere 100, ci si muove con un dado, e ci sono snake che ti riportano in dietro e ladder che ti portano avanti, trovare il minimo numero di tirate di dado per arrivare in fondo.
 
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_103607.png}
+\end{center}
 
+Si trasforma ogni cella in un nodo, e per ogni nodo abbiamo 6 archi (le facce del dado), e se si va su un ladder si va al suo nodo e via, e si computa lo shortest path, e via.
 
+Nunning Time: $\Theta(n)$
 
+\subsection{Minimum Cost Path}
+A è una n * m matrice con degli integer, l'obbiettivo è computare il path di costo miimo dal top-left angolo al bottom right muovendoci solamente in basso e a destra.
 
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_104329.png}
+\end{center}
 
+\subsection{Longest Common Subsequence LCS}
+Dato $S_1$ ($|S_1|=n$) e $S_2$ ($|S_2|=m$) trovare LCS($S_1,S_2$),
 
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_105704.png}
+\end{center}
 
+Vogliamo $\Theta (n \cdot m)$ time.
 
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_110039.png}
+\end{center}
 
+\includegraphics[scale=0.2]{Screenshot_20251201_110417.png}
+\begin{center}
+\end{center}
 
+\columnbreak
 
+Dobbiamo trovare il sub problem ovvero prendere il i prefissi delle due stringhe. E dobbiamo trovare come combinarli, ovvero aggiungere due simboli alle stringhe gia processati, ovvero c1 == c2, se sono uguali gasse, se no stica. 
+\end{multicols}
 
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_110619.png}
+\end{center}
+\columnbreak
+se sono lunghe 0 allora 0, se sonouguali allora gasse, e per gli altri casi uguali. 
+\end{multicols}
 
+Ma questo approccio è top down, dobbiamo fare la ricorsione. mentre vorremmo buildare la tabella dall'inizio e pienare la tabella per riga e non per colonna.
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_110959.png}
+\end{center}
+\columnbreak
+Si fa una tabella 2D, inizialmente sappiamo tutte le risposte per la prima riga e colonna, quindi 0, e si usa la recurrence per iniziare a fare la tabella. 
+\end{multicols}
 
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_111307.png}
+\end{center}
+\columnbreak
+Notare che si usano le celle in alto, a sinistra  e in alto a sinistra per fare calcolare la cella corrente. 
+\end{multicols}
 
+\subsection{0/1 knapsack problem}
+0 si prende l'item e 1 no, e si deve prendere piu item possibili per massimizzare il peso dello zaino. Abbiamo $n$ items e abbiamo $C$ capacity, ogni item $i$ ha un valore $v_i$ e una weight $w_i$, prendere un subset di item che massimizza il valore rimanendo nella $C$ capacity.
 
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_111711.png}
+\end{center}
 
+Vogliamo $\Theta (n \cdot C)$ time.
 
+Cerchiamo il problema per una capacity piu piccola e meno item (ovvero si fa un ordering e si prende il prefix via via), e il combine è il seuguente:
 
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_112942.png}
+\end{center}
+\columnbreak
+Abbiamo $i$ item mentre prima ne avevamo i-1 item, e si vuole prendere l'item $i$ ? No, ovvero si prende la soluzione prima, ma se si prende allora si prende la soluzione di prima  + il suo valore, ma dobbiamo fargli spazio, quindi $J-w_i$. 
+\end{multicols}
 
+recurrence? ovvero come si fa il base case ? o il caso normale? 
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_113059.png}
+\end{center}
 
+Cosi è facilissimo, si fa row wise, quindi bottom up, seguendo l'algoritmo gasse, 
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_113425.png}
+\end{center}
+\columnbreak
 
+per ogni cella si prende sempre il massimo valore possibile, e in caso si controlla se togliere l'ultimo item ha senso. 
+\end{multicols}
 
+\subsection{Fractional knapsack}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_114549.png}
+\end{center}
 
+Si fa in $\Theta(n \log n)$ time, con un algoritmo greedy, per ogni item si fa il ratio$_i = \frac{v_i}{w_i}$ value per unit of weight, si sortano gli item b decreasing ratio, cosi si massimizza il valore  e si selezionano gli item fino a che non si finisce la capacity. 
 
+\subsection{Puzzle exercise}
+Abbiamo 2 pairs of coins, selezionare $k$ coins per massimizzare il total value, ma si puè selezionare il secondo coin solo se anche il primo è stato selezionato. 
 
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_120112.png}
+\end{center}
 
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_120353.png}
+\end{center}
+\columnbreak
+Con k= 1 si prende 10 perche possiamo solo sezionare questo, 12 non si puo prendere perche si deve prendere 1 prima. 
+\end{multicols}
 
+Comunque con k=3 non si estende le soluzioni gia fatte, perche si prende 10 poi 1 e poi 12, quindi come si fa????
 
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_120545.png}
+\end{center}
+\columnbreak
+Prima soluzione $\Theta(n^2)$, dag strategy e via , fake source e destination, e si connettono, ma dobbiamo fare lo shortest path di length k.
+\end{multicols}
 
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_121317.png}
+\end{center}
+\columnbreak
+Seconda soluzione, fa $\Theta(n k )$ time , si fa un approach come il knapsack fractional, un coin ha weitght 1, un coin e il suo pair ha weight 2, ma non ho capito.
+\end{multicols}
 
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_121606.png}
+\end{center}
+\columnbreak
+terza soluzione: $\Theta(n \log n)$ si fa un greedy approach, e si usano gli item della seconda soluzione, si fa il ratio e si sortano ma dobbiamo stare attenti di non prendere il coin al primo livello. 
+\end{multicols}
 
+\subsection{Longest Increasing Subsequence (LIS)}
+Dato una sequenza S di n elementi, trovare LIS di S.  Ovvero una sequenza di elementi che è increasing, ma vogliamo quella piu lunga 
 
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_121821.png}
+\end{center}
 
+Prima soluzione quadratica: si prende il sub problem, ovvero si prende solo il prefisso della sequenza, ma qui non serve perche dobbiamo ricordarci i numeri che compongono la LIS, quindi come si fa? 
 
+Si forza che LIS(i) finisce con S[i] dove è l'ultimo elemento della LIS, cosi possiamo fare: 
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_122510.png}
+\end{center}
 
-
-
-
+La cosa brutta è che dobbiamo fare il check di tutte le LIS trovate finora, quindi gasse, quadratico.
 
 
 
