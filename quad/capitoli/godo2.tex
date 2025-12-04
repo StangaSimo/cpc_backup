@@ -1280,12 +1280,155 @@ Si forza che LIS(i) finisce con S[i] dove è l'ultimo elemento della LIS, cosi p
 \includegraphics[scale=0.2]{Screenshot_20251201_122510.png}
 \end{center}
 
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_122805.png}
+\end{center}
+\columnbreak
 La cosa brutta è che dobbiamo fare il check di tutte le LIS trovate finora, quindi gasse, quadratico.
+\end{multicols}
 
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_123159.png}
+\end{center}
+\columnbreak
+Soluzione 2: sempre quadratica, si trasforma tutto in un nodo, si fa la fake destination e source, si connette ad ogni nodo i suoi nodi che possono estenderlo nella LIS, e si fa il longhest path. 
+\end{multicols}
 
+\clearpage
 
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_124512.png}
+\end{center}
+\columnbreak
+3 soluzione $\Theta(n \log n)$, diciamo che una posizoone $i$ domina una posizione $j$ se $S[i] < S[j]$ e $LIS[i] \ge LIS[j]$.
 
+Se vale questo j è inutile per i, in questo caso per 16 j è inutile ed è melgio comuqnue prendere $i$ perche 13 può prendere 
+\end{multicols}
 
+Tutti i valori inoltre nei LIS sono rappresentati. C'è solamente una posiziooen dominante per ogni valore possibile di LIS.
+
+\begin{multicols}{2}
+\begin{center}
+\includegraphics[scale=0.2]{Screenshot_20251201_124512.png}
+\end{center}
+\columnbreak
+Si tiene un valore di Dominating Position, come si piena questa tabella? si cerca un valore piu piccolo di quello corrente, abbiamo 10, estende qualcosa? no quindi 1, é 10 una posizione dominante? si va nella tabella e si guarda se c'è 
+
+Ora 22 si può estendere, e quindi anche 22 può dominare,  MA IL PROF HA INTERROTTO LA LEZIOEN 
+\end{multicols}
+
+\section{Greedy}
+\subsection{Activity Selection Problem}
+n Attivita rappresentate come intervalli, select the largest number of non-overlapping activities 
+
+Disegno prof intervalli 
+
+Come si affronta, si cerca l'euristica greedy per fare la scelta giusta, ma deve darci al soluzione optimal, e per fare questa cosa basta trovare un proof oppure un controesempio (E SI TROVA SEMPRE UN CONTROESEMPIO), in questo caso:
+
+\# 1 strategy: si selezione in base a chi ha lo starting time piu piccolo. Si selezione una attività iniziale, si levano le overlap e si prende quella che inizia prima, va bene? Ovviamente con un esempio stupido non funziona questo esempio. 
+
+\# 2 strategy: Select Smallest first, anche questa fa cagare 
+
+\# 3 strategy: Selezionare prima le attività che hanno meno overlaps, manco questa è optimal.
+
+\# 4 strategy: Ending Time, si prende quella che finisce prima e si prende, poi tra quelle che finiscono prima che non overlappano si prendono, gasse funziona $\Theta (n\log n)$ time.
+
+Adesso dobbiamo provarlo che è quello optimal:
+
+\paragraph{Lemma}: "there exists at least an optimal solution which includes the first ending activity f"
+\paragraph{Proof}: dobbiamo provare questo lemma, immaginiamo di aver una optimal solution, chiamata O*
+
+\begin{multicols}{2}
+
+FOTO PROOOOF
+
+\columnbreak
+
+Vogliamo modificare una optimal solution facendo vedere che se la modifichiamo con la nostra strategia allora abbiamo lo stesso risultato.
+
+Diciamo che la sua prima attività g, non è la prima che finisce, ma ce ne è una f che finisce prima, e se comunque prendiamo questa allora $O_p *$ rimane comunque optimal.
+
+\end{multicols}
+
+\subsection{Job Sequencing}
+Per ogni job , id, deadline e profit, si deve fare il job prima della deadline, e ogni job consuma uno slot di tempo.
+
+FOTO PROF 
+
+Quale strategia? si sortano per valore, e poi si processano dal piu alto di valore al piu basso, dove si mette a? si mette nella sua deadline incredibile, 
+Si buttano gli empty slot in un BST, si prendono in nodi i decreasing order, e ci chiediamo la sua deadline è presa? no? allora ci si mette, se no? si cerca un predecessor della deadline nel BST e cosi via.
+
+\subsection{Magic Numbers}
+Un numero magico è formato concatenando i numeri 1,14,144. Per esempio 14141 è un numero magico, mentre 1444 non è un numero magico. Determinare se un numero è un magic number. 
+
+Proprieta figa: nessuna stringa è il suffix dell'altra, 1 non è il suffisso di 14, e nemmeno 14 lo è per 144, per questo gasse. E la strategia greedy? si prende sempre la stringa piu grande.
+
+\subsection{Lemple-Zir} 
+E' un algoritmo greedy, si traversa da sinistra a destra nel testo, e voglio trovare la stringa piu grande possibile che si ripete nel "passato", cosi da zippare meglio la stringa (è un algo di compressione).
+
+Che si fa? scrive dei pair dove puntare e quanto sono lunghi. 
+
+In questa maniera si fa il parsing da sinistra a destra e si da gassssssssssssssssssssssssssss
+
+\subsection{Lexicographically Maximum Subsequence}
+Data una sequenza tipo \texttt{ababba} vorremmo selezionare una sequenza tipo \texttt{bab}, ma non è quella piu grande, perche vogliamo quella lessicograficamente piu grande infatti \texttt{aabba} $<$ \texttt{aabc}.
+
+\begin{center}
+\texttt{abbcbccacbbcbaaba}
+\end{center}
+
+Si fa la scan da destra a sinistra e ci teniamo solo le stringhe che sono piu grandi godo, nell'esempio, si prende a si prende b poi b perche è uguale a noi,  poi c e tutti gli c fino in fondo e si gode, tanto vince sempre la piu grande partendo da sinistra quindi gasse.
+
+\subsection{Pareto Optimal Selection}
+Vogliamo selezionare la parte optimal frontier, ovvero punti che prendono dominano gli altri, ovvero (x,y) domina $(x_i,y_i)$ se $x > x_1$ e $y>y_1$, 
+
+foto proofofoffffff
+
+\subsection{Woodcutter}
+ULTIMA LEZIONE :(((((((((((((((((((((((((((((
+
+una foresta di alberi, n trees, ogni albero ha la sua altezza, vogliamo massimizzare il numero di alberi che possiamo tagliare, quando tagliamo l'albero possiamo decidere se farlo cascare a destra o sinistra, ma non possiamo scegliere di talgiare un tree che casca su un'altro albero. Ovviamente vogliamo tagliare piu alberi possibile, in ogni caso anche se l'albero è stato tagliato, non possiamo tagliarlo. 
+
+FOTO PROOOOF 
+
+Semplicemente prima si controlla se l'albero si può far cascare a sinistra, se no si controlla a destra, e se può cascare ma influenza comunque stica, godo tanto è sempre un albero in meno.
+
+\subsection{queue}
+coda, ogni persona ha un'altezza e il numero di persone davanti a lei nella coda che sono piu alte di lei. Possiamo ricostruire la coda? in certi casi è possibile 
+
+FOTO PROF
+
+Ovviamente si lavora al contrario, quindi da destra a sinistra. Si prende $\Theta(n^2)$ time, si sortano le altezze in decreasing order e per ognuno partendo da sinistra a destra si mette nel suo posto a patto che non distrugga la condizione di un'altro numero prima.  
+
+c'è un algoritmo piu stupido, creare un array e fare l'insert dentro all'array, ma costa quadratico ugualmente, FOTO PROF CODICE. tanto basta sempre metterlo in quella posizione visto che abbiamo sempre la 
+
+TOODOOOOOO: CERCARE UNA SOLUZIONE A QUESTO PROBLEMA PIU FIGA DELLA SKIP LIST
+
+Soluzione con la skip list la sappiamo gia grazie Ferragina. log n di predecessor query, e n di space, godo, e per inserire un elemento li dentro????? gasse si butta il numero dove deve stare e si inserisce e via, si tira il random e si sceglie se farlo scendere e via. 
+
+\subsection{Boxes}
+GREDY + DYNAMIC GODO: n boxes, ogni box i  ha $w_i$ pesantezza e $d_i$ surability ovvero la quantità di peso che si può mettere nel box $i$. 
+
+FOTO PROF
+
+Build the highest tower with some boxes. 
+
+Assumento che sappiamo un optimal ordering dei boxes, 
+
+hint: per i primi i boxes dp[i][k] = minimum weight of a tower of height K with the first i boxes.  FOTO PROF con boxes e definizione di dp[i][k]
+
+Per tutti i primi $i$ boxes, voglio la minimum wight di tutte le tower di altezza k (quindi da 1 a k)
+
+(FOTO PROF FORMULA MIN) Quindi dp[i][k] sapendo tutte le soluzioni di dp[i-1][k-1], allora si prende  il minimo tra la torre alta quanto noi ma deigli elementi di prima, oppure si prende la torre di wight minima alta meno di noi quindi dp[i-1][k-1] + noi, quindi $w_i$, ma solo se la noi possiamo sorreggere la torre. Ovviamente $\Theta(n^2)$ time. 
+
+Quindi \textbf{subproblem}: come si seleziona l'ordering migliore?  tra A e B, chi si mette prima o dopo? Se A sta sotto B, allora la durabilità di A diventa $d_A = d_A - w_B$ e invece al contrario $d_B = d_B - w_A$, allora che si fa? si decide solamente in base a:
+
+$$ 
+d_A - w_B \le d_B - w_A \Longrightarrow d_A + w_A \le d_B + w_B
+$$
 
 
 

@@ -1,5 +1,5 @@
 # Fdb version 4
-["pdflatex"] 1764588386.3543 "quad.tex" "quad.pdf" "quad" 1764588403.57485 0
+["pdflatex"] 1764676561.26309 "quad.tex" "quad.pdf" "quad" 1764676595.50701 0
   "/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc" 1136849721 2900 1537cc8184ad1792082cd229ecc269f4 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/tfm/jknappen/ec/tcbx1000.tfm" 1136768653 1536 30fde759286ded71559881bfa2623939 ""
@@ -102,8 +102,8 @@
   "/usr/local/texlive/2025/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1764174464 5541377 0af08d58b046ada1f2a2c7d4825ab417 ""
   "/usr/local/texlive/2025/texmf-var/web2c/pdftex/pdflatex.fmt" 1764174506 3635706 952c467f839c73341255e0ce2b665a44 ""
   "/usr/local/texlive/2025/texmf.cnf" 1764174460.62276 455 5b996dcaa0eb4ef14a83b026bc0a008c ""
-  "capitoli/godo2.aux" 1764588403.52008 7756 c28c229fd19cdf7f760b972f1372cc1a "pdflatex"
-  "capitoli/godo2.tex" 1764588385.39204 62044 0d03432ac74b641d305196d5b11c90b6 ""
+  "capitoli/godo2.aux" 1764676595.3899 9164 1273ba1dae1aa4d03d2994ffbd5f2bb4 "pdflatex"
+  "capitoli/godo2.tex" 1764676563.21681 70241 2142898a50d8f7566a35ed29972e27de ""
   "images/Screenshot_20251129_111855.png" 1764411597.833 1973099 4a94c628f54ea6f5574da63991b66e57 ""
   "images/Screenshot_20251129_112649.png" 1764412011.611 505552 6c41ef81df9ad50a2ebad6631d353efc ""
   "images/Screenshot_20251129_113221.png" 1764412343.74868 831257 ef0ee0cf0884695211375f4251976b2f ""
@@ -137,10 +137,13 @@
   "images/Screenshot_20251201_121606.png" 1764587768.08148 88017 b074ddf6750f329b4d5574488c18e326 ""
   "images/Screenshot_20251201_121821.png" 1764587903.11982 89518 02bbccc6bf259eb297132f21b6a3e0ad ""
   "images/Screenshot_20251201_122510.png" 1764588311.67485 183487 928585af0522e5eb40d4ddbbaafceee2 ""
-  "quad.aux" 1764588403.52008 191 0e11d1949c5d4a18eff25b05d26e9ed5 "pdflatex"
-  "quad.out" 1764588403.52159 7859 795b68f5903859caafe6b6457b961739 "pdflatex"
+  "images/Screenshot_20251201_122805.png" 1764588487.72329 197265 cfd6474ed4f6cc2d698a21fc5b2adb19 ""
+  "images/Screenshot_20251201_123159.png" 1764588721.33788 244166 40ef153a62b74a548ca2def2d83de630 ""
+  "images/Screenshot_20251201_124512.png" 1764589512.33299 180568 e5287a5b7a30109a140c9b065db53dce ""
+  "quad.aux" 1764676595.3899 191 c826e287322be4c707b2e3ce3c289d59 "pdflatex"
+  "quad.out" 1764676595.39267 9199 7fb9998d5a6490952ca15079f5243a39 "pdflatex"
   "quad.tex" 1764177909.81247 4108 b595d3fc3e7a9343aab7fe1b736dd2bf ""
-  "quad.toc" 1764588403.52159 4246 b573873201bdd6d728ec43b5e13b047f "pdflatex"
+  "quad.toc" 1764676595.39267 5162 ea95080660024a212eab5744f8986edc "pdflatex"
   (generated)
   "capitoli/godo2.aux"
   "quad.aux"
