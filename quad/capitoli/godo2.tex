@@ -1203,10 +1203,13 @@ Cerchiamo il problema per una capacity piu piccola e meno item (ovvero si fa un 
 Abbiamo $i$ item mentre prima ne avevamo i-1 item, e si vuole prendere l'item $i$ ? No, ovvero si prende la soluzione prima, ma se si prende allora si prende la soluzione di prima  + il suo valore, ma dobbiamo fargli spazio, quindi $J-w_i$. 
 \end{multicols}
 
-recurrence? ovvero come si fa il base case ? o il caso normale? 
+\begin{multicols}{2}
 \begin{center}
 \includegraphics[scale=0.2]{Screenshot_20251201_113059.png}
 \end{center}
+\columnbreak
+K(i,J) = il valore massimo che posso ottenere considerando i primi i oggetti, avendo uno zaino di capacità J. E si dice che è il massimo con K di  i-1 con lo stesso spazio, oppure devo aggiungere il mio valore ma devo avere spazio sufficente, quindi \textbf{guardo alla migliore risposta senza il mio peso, per questo K(i-1,J-w\_i)}
+\end{multicols}
 
 Cosi è facilissimo, si fa row wise, quindi bottom up, seguendo l'algoritmo gasse, 
 \begin{multicols}{2}
