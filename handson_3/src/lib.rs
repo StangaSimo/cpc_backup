@@ -302,10 +302,10 @@ impl Course {
         let mut pairs: Vec<(&u32, &u32)> = self.d.iter().zip(self.b.iter()).collect();
 
         pairs.sort_by(|a, b| {
-            if a.0 != b.0 {
-                a.0.cmp(b.0)
+            if a.1 != b.1 {
+                a.1.cmp(b.1)
             } else {
-                b.1.cmp(a.1)
+                b.0.cmp(a.0)
             }
         });
 
