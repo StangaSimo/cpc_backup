@@ -136,35 +136,313 @@ pub fn fetch_and_test_holiday_planning(input_folder: &str, output_folder: &str) 
     }
 }
 
+struct Node {
+    key: u32,
+    right: Option<usize>,
+    left: Option<usize>,
+}
 
+impl Node {
+    pub fn new (key: u32, right: Option<usize>, left: Option<usize>) -> Node {
+        Self{ 
+            key,
+            right,
+            left,
+        }
+    }
+}
 
+struct Bst {
+    v: Vec<Node>,
+}
 
+impl Bst {
+    pub fn new () -> Bst {
+        Self{ 
+            v: Vec::new(),
+        }
+    }
 
-//pub fn test_h() {
-//    let  n: usize = 5;
-//    let  d: usize = 4;
-//
-//    let v: Vec<u32> = vec![4,1,1,2,1,1,0,5,5,0,1,1,2,1,0,4,3,1,0,3];
-//
-//    println!("------- v");
-//    for i in 0..n {
-//        for j in 0..d {
-//            print!(" {:?} ",v[i*d+j]);
-//        }
-//        print!("\n");
-//    }
-//
-//    let mut h: Holidays = Holidays::new(n,d,v);
-//
-//    println!("------- p");
-//    for i in 0..n {
-//        for j in 0..d {
-//            print!(" {:?} ",h.prefixes[i*d+j]);
-//        }
-//        print!("\n");
-//    }
-//
-//    println!("result : {:?} ==? 14",h.compute_holiday())
-//}
+    /* we build it with the random values and not in order, 
+     * starting from the root we search for the right place for the keys*/
+    pub fn build(&mut self, difficulty: Vec<u32>) {
+        for i in 0..difficulty.len() {
+            println!("i {:?}",i);
+            self.add(difficulty[i]);
+        }
+    }
+        
+    pub fn add(&mut self, key: u32) {
+        self.rec_add(key, 0);
+    }
+
+    pub fn rec_add(&mut self, key: u32, index: usize) {
+        let n = self.v.len();
+
+        /* root */
+        if n == 0 {
+            self.v.push(Node::new(key,None,None));
+            return 
+        }
+
+        let node_key = self.v[index].key;
+
+        /* right */
+        if key >= node_key {
+            if self.v[index].right == None {
+                self.v.push(Node::new(key,None,None));
+                self.v[index].right = Some(n);
+            } else {
+                self.rec_add(key, self.v[index].right.unwrap());
+            }
+        /* left */
+        } else {
+            if self.v[index].left == None {
+                self.v.push(Node::new(key,None,None));
+                self.v[index].left = Some(n);
+            } else {
+                self.rec_add(key, self.v[index].left.unwrap());
+            }
+        }
+    }
+
+    /* return Some(successor) */
+    /* if right exists, then go in, and search for the min, so all left */
+    pub fn successor(&mut self, key: u32) -> Option<usize> {
+        if self.v.len() == 0 {
+            return None 
+        }
+
+        /* if root_key == target and right exists return right or min left right*/
+        if self.v[0].key == key && self.v[0].right != None {
+            let right_id = self.v[0].right.unwrap();
+            return Some(self.min_left(right_id));
+        }
+
+        let mut succ: Option<usize> = None; 
+        let mut curr : Option<usize> = Some(0); 
+
+        /* si cerca l'index della key piu grande ma piu vicina al target */
+        while curr != None {
+            let curr_id = curr.unwrap();
+            let curr_key = self.v[curr_id].key;
+            if key < curr_key {
+                succ = curr;
+                curr = self.v[curr_id].left;
+            } else {
+                curr = self.v[curr_id].right;
+            }
+        }
+
+        succ 
+    }
+
+    fn min_left(&mut self, i: usize) -> usize {
+        if (self.v[i].left != None) {
+            return self.min_left(self.v[i].left.unwrap());
+        }
+        return i
+    }
+
+    fn max_right(&mut self, i: usize) -> usize {
+        if (self.v[i].right != None) {
+            return self.max_right(self.v[i].right.unwrap());
+        }
+        return i
+    }
+
+    pub fn print(&mut self) {
+        println!("-------------------------------------");
+        self.print_recursive(Some(0), 0);
+        println!("-------------------------------------");
+    }
+
+    fn print_recursive(&mut self, i: Option<usize>, level: usize) {
+        if i == None {
+            return;
+        }
+
+        let index = i.unwrap(); 
+        let right_id = self.v[index].right;
+        let left_id = self.v[index].left;;
+
+        const INDENT: usize = 4; // Spazi per livello
+
+        self.print_recursive(right_id, level + 1);
+
+        let spaces = " ".repeat(level * INDENT);
+        let key = self.v[index].key;
+
+        if level > 0 {
+            println!("{:?}┌── {:?}:{:?}", spaces, index, key);
+        } else {
+            println!("{:?}└── {:?}:{:?}", spaces, index, key); // root
+        }
+
+        self.print_recursive(left_id, level + 1);
+    }
+}
+
+struct Course {
+    b: Vec<u32>, /* beauty */
+    d: Vec<u32>, /* difficulty */
+    bst: Bst,
+}
+
+impl Course {
+    pub fn new (b: Vec<u32>, d: Vec<u32>) -> Course {
+        Self { 
+            b,
+            d,
+            bst: Bst::new(),
+        }
+    }
+
+    pub fn lis(&mut self) -> usize {
+        let mut pairs: Vec<(&u32, &u32)> = self.d.iter().zip(self.b.iter()).collect();
+
+        pairs.sort_by(|a, b| {
+            if a.0 != b.0 {
+                a.0.cmp(b.0)
+            } else {
+                b.1.cmp(a.1)
+            }
+        });
+
+        let b_by_d: Vec<u32> = pairs.into_iter().map(|(_d, b)| *b).collect();
+
+        if b_by_d.is_empty() { return 0; }
+
+        self.bst.add(b_by_d[0]);
+
+        for i in 1..b_by_d.len() {
+            let key = b_by_d[i];
+            let max_id = self.bst.max_right(0);
+            let max_key = self.bst.v[max_id].key;
+
+            if key > max_key {
+                self.bst.add(key);
+            } else {
+                if let Some(succ) = self.bst.successor(key) {
+                    self.bst.v[succ].key = key;
+                }
+            }
+        }
+
+        self.bst.v.len()
+    }
+
+    /* answer the problem */
+    //pub fn lis (&mut self) -> usize {
+    //    let mut pairs: Vec<(&u32, &u32)> = self.d.iter().zip(self.b.iter()).collect();
+
+    //    pairs.sort_by_key(|k| k.0);
+
+    //    let b_by_d: Vec<u32> = pairs.iter()
+    //        .map(|(_dif, b)| **b) // b è &&u32, quindi **b è u32
+    //        .collect();
+
+    //    let mut res: usize = 0;
+
+    //    /* se piu grande del massimo allora si appende 
+    //    *  se no si cerca il successore e si sostituisce e via */ 
+    //    self.bst.add(b_by_d[0]);
+
+    //    for i in 1..b_by_d.len() {
+    //        let key = b_by_d[i]; 
+    //        let max_id = self.bst.max_right(0);
+    //        let max_key = self.bst.v[max_id].key; 
+    //        if  key >= max_key {
+    //            self.bst.add(key);
+    //        } else {
+    //            let succ = self.bst.successor(key).unwrap();
+    //            self.bst.v[succ].key = key; 
+    //        }
+
+    //        println!("beauty {:?}",self.b);
+    //        self.bst.print();
+
+    //    }
+
+    //    self.bst.v.len()
+    //}
+}
+
+pub fn test() {
+    let  n: usize = 5;
+    
+    let b: Vec<u32> = vec![0,99,11,1,10];
+    let d: Vec<u32> = vec![3,1,20,2,5];
+
+    let mut c = Course::new(b, d);
+
+    println!("{:?} == 3", c.lis());
+}
+
+pub fn fetch_and_test_course(input_folder: &str, output_folder: &str) {
+    let mut input_files : Vec<PathBuf> = fs::read_dir(input_folder)
+        .expect("ERROR TEST FILES")
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path())
+        .collect();
+
+    let mut output_files : Vec<PathBuf> = fs::read_dir(output_folder)
+        .expect("ERROR OUTPUT FILES")
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path())
+        .collect();
+
+    /* sort first by length then by string (se no input10 era meno di input2) */
+    input_files.sort_by_key(|p| (p.to_str().unwrap().len(), p.clone()));
+    output_files.sort_by_key(|p| (p.to_str().unwrap().len(), p.clone()));
+
+    let mut input_iter = input_files.iter(); let mut output_iter = output_files.iter();
+
+    assert!(input_files.len() == output_files.len());
+
+    for _ in 0..input_files.len() {
+        let input_path = input_iter.next().unwrap();
+        let output_path = output_iter.next().unwrap();
+        let input_string = fs::read_to_string(input_path).unwrap();
+        let output_string = fs::read_to_string(output_path).unwrap();
+
+        println!("{:?} and {:?}", input_path, output_path);
+        
+        let mut input_chars = input_string.split_whitespace();
+        let mut output_chars = output_string.split_whitespace();
+
+        let output_result: usize = output_chars.next().unwrap().parse().unwrap();                
+
+        let n: usize = input_chars.next().unwrap().parse().unwrap();
+
+        let mut beauty: Vec<u32> = Vec::with_capacity(n);
+        let mut difficulty: Vec<u32> = Vec::with_capacity(n);
+
+        /* b d*/
+        for _ in 0..n {
+            let b: u32 = input_chars.next().unwrap().parse().unwrap();
+            let d: u32 = input_chars.next().unwrap().parse().unwrap();
+            beauty.push(b);
+            difficulty.push(d);
+        }
+
+        let mut course: Course = Course::new(beauty, difficulty);
+
+        let result: usize = course.lis();
+
+        let mut check_err: bool = false;
+
+        if output_result != result {
+            check_err = true;
+            println!("TEST FAILED {:?} should be {:?}", result, output_result);
+        }
+ 
+        if check_err {
+            println!("TEST FAILED ");
+        } else {
+            println!("TEST PASSED ");
+        }
+    }
+}
 
 
