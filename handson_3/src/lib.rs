@@ -71,7 +71,7 @@ impl Holidays {
         }
 
         self.max[d-1] /* return the last element that is the 
-                           max attractions possibile in the day */
+                         max attractions possibile in the day */
     }
 }
 
@@ -103,7 +103,7 @@ pub fn fetch_and_test_holiday_planning(input_folder: &str, output_folder: &str) 
         let output_string = fs::read_to_string(output_path).unwrap();
 
         println!("{:?} and {:?}", input_path, output_path);
-        
+
         let mut input_chars = input_string.split_whitespace();
         let mut output_chars = output_string.split_whitespace();
 
@@ -127,7 +127,7 @@ pub fn fetch_and_test_holiday_planning(input_folder: &str, output_folder: &str) 
             check_err = true;
             println!("TEST FAILED {:?} != {:?}", result, output_result);
         }
- 
+
         if check_err {
             println!("TEST FAILED ");
         } else {
@@ -171,7 +171,7 @@ impl Bst {
             self.add(difficulty[i]);
         }
     }
-        
+
     pub fn add(&mut self, key: u32) {
         self.rec_add(key, 0);
     }
@@ -195,7 +195,7 @@ impl Bst {
             } else {
                 self.rec_add(key, self.v[index].right.unwrap());
             }
-        /* left */
+            /* left */
         } else {
             if self.v[index].left == None {
                 self.v.push(Node::new(key,None,None));
@@ -298,17 +298,23 @@ impl Course {
         }
     }
 
+    pub fn bst_len(&mut self) -> usize {
+        self.bst.v.len()
+    }
+
     pub fn lis(&mut self) -> usize {
         let mut pairs: Vec<(&u32, &u32)> = self.d.iter().zip(self.b.iter()).collect();
 
+        /* sort by difficulty, if equal by beauty */
         pairs.sort_by(|a, b| {
-            if a.1 != b.1 {
-                a.1.cmp(b.1)
+            if a.0 != b.0 {
+                a.0.cmp(b.0)
             } else {
-                b.0.cmp(a.0)
+                b.1.cmp(a.1)
             }
         });
 
+        /* collect beaty */
         let b_by_d: Vec<u32> = pairs.into_iter().map(|(_d, b)| *b).collect();
 
         if b_by_d.is_empty() { return 0; }
@@ -321,62 +327,19 @@ impl Course {
             let max_key = self.bst.v[max_id].key;
 
             if key > max_key {
+                /* if greater than max add key */
                 self.bst.add(key);
             } else {
-                if let Some(succ) = self.bst.successor(key) {
-                    self.bst.v[succ].key = key;
+                /* if succ exists, we swap succ with key */ 
+                let succ = self.bst.successor(key);
+                if succ != None {
+                    self.bst.v[succ.unwrap()].key = key;
                 }
-            }
+            } 
         }
-
-        self.bst.v.len()
+        /* the length of the bst */
+        self.bst_len()
     }
-
-    /* answer the problem */
-    //pub fn lis (&mut self) -> usize {
-    //    let mut pairs: Vec<(&u32, &u32)> = self.d.iter().zip(self.b.iter()).collect();
-
-    //    pairs.sort_by_key(|k| k.0);
-
-    //    let b_by_d: Vec<u32> = pairs.iter()
-    //        .map(|(_dif, b)| **b) // b è &&u32, quindi **b è u32
-    //        .collect();
-
-    //    let mut res: usize = 0;
-
-    //    /* se piu grande del massimo allora si appende 
-    //    *  se no si cerca il successore e si sostituisce e via */ 
-    //    self.bst.add(b_by_d[0]);
-
-    //    for i in 1..b_by_d.len() {
-    //        let key = b_by_d[i]; 
-    //        let max_id = self.bst.max_right(0);
-    //        let max_key = self.bst.v[max_id].key; 
-    //        if  key >= max_key {
-    //            self.bst.add(key);
-    //        } else {
-    //            let succ = self.bst.successor(key).unwrap();
-    //            self.bst.v[succ].key = key; 
-    //        }
-
-    //        println!("beauty {:?}",self.b);
-    //        self.bst.print();
-
-    //    }
-
-    //    self.bst.v.len()
-    //}
-}
-
-pub fn test() {
-    let  n: usize = 5;
-    
-    let b: Vec<u32> = vec![0,99,11,1,10];
-    let d: Vec<u32> = vec![3,1,20,2,5];
-
-    let mut c = Course::new(b, d);
-
-    println!("{:?} == 3", c.lis());
 }
 
 pub fn fetch_and_test_course(input_folder: &str, output_folder: &str) {
@@ -407,7 +370,7 @@ pub fn fetch_and_test_course(input_folder: &str, output_folder: &str) {
         let output_string = fs::read_to_string(output_path).unwrap();
 
         println!("{:?} and {:?}", input_path, output_path);
-        
+
         let mut input_chars = input_string.split_whitespace();
         let mut output_chars = output_string.split_whitespace();
 
@@ -436,13 +399,13 @@ pub fn fetch_and_test_course(input_folder: &str, output_folder: &str) {
             check_err = true;
             println!("TEST FAILED {:?} should be {:?}", result, output_result);
         }
- 
+
         if check_err {
             println!("TEST FAILED ");
         } else {
             println!("TEST PASSED ");
         }
+
     }
 }
-
 
