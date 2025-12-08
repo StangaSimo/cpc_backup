@@ -104,7 +104,7 @@
 
 \lstset{style=mystyle}
 
-\title{First Handson Report}
+\title{Third Handson Report}
 \author{Simone Stanganini mat. 616834}
 
 \begin{document}
@@ -114,19 +114,29 @@
 \vspace{0.3cm}
 \vspace{0.3cm}
 
-These are my implementations of the 2 problems asked in the handson:
-
-\vspace{0.3cm}
-\vspace{0.3cm}
-
 \begin{itemize}
-    \item \texttt{fn check\_bst()}: calls the recursive function \texttt{rec\_check\_bst()}. This function recursively checks the left and right subtree. The calls return a struct that contains the max and min found in the subtree and if the bst rule was respected. The base case is, of course, true. The first check is for the bad case: when the current node's key is greater than the min from the right subtree or less than the max from the left subtree. If so, we return false and propagate the failure. If we pass this check, we propagate the results and update the min and the max with the current node's key.
+    \item \textbf{Problem 1: Holiday Planning}
 
-    \item \texttt{fn max\_path\_sum()}: This function first create \texttt{max} variable, then calls the recursive function \texttt{rec\_max\_path\_sum()} and passes it as a mutable reference for tracking the maximum path found at every moment, then in the recursive function we get the best path sum from the left and right subtrees. Then we calculates two values: \begin{enumerate} \item \texttt{current\_path\_sum}: the path sum through the current node (key + left + right). \item \texttt{res}: the best path \textbf{to one leaf} to propagate up to the parent (key + max(left, right)). \end{enumerate} Then we updates the global \texttt{max} if \texttt{current\_path\_sum} is larger and we returns \texttt{res} for the parent call. The base case (an empty child) returns 0.
+        For this implementation, initially i approached the problem using a DAG, but during implementation i found it difficult to manage in those terms so i switched to a dynamic programming approach based on \texttt{prefix\_sum} (initially i didn't use it, but to reduce complexity i realized it was enough to compute the \texttt{prefix\_sum} at the start) and also, initially i used a table for maximums, but then i realized that only two arrays were needed.
 
-    \vspace{0.3cm}
+        First, i calculate the \texttt{prefix\_sum} of the number of attractions for each day in every city, then i use two arrays, \texttt{max} and \texttt{new\_max}. The item \texttt{max[i]} holds the best attraction value for the \texttt{i} day, while \texttt{new\_max} contains the newly calculated maximums.
+
+        I iterate through every day in the \texttt{prefix\_sum} table and try to update the \texttt{new\_max} array by looking for a combination between the current days and the values in the \texttt{max} array.
+
+        This is done using a loop over all elements (the two loops for $n$ and $d$) and an inner loop from $j-1$ to $0$ to check all combinations. Therefore, in the worst case, the complexity is $\Theta(n\cdot d^2)$ since for every j we iterate at most d times. The space cost of the algorithm is linear, $\Theta(n\cdot d)$.
+
+    \item \textbf{Problem 2: Desing Course}
+
+        Tackling this problem, its clear that we have to transform it into other terms, meaning ordering the items in a way to find the right combination. To do this i decided to sort the items by \texttt{difficulty} and find the LIS (Longest Increasing Subsequence) among the \texttt{beauty} values.
+
+        To write the LIS algorithm, after reading the professor's Dynamic Programming notes on GitHub, instead of doing binary search on an array i decided to implement a custom Binary Search Tree:
+
+        \begin{itemize}
+            \item I check the maximum value in the BST. if the current course's beauty is greater than the maximum, i simply add it to the tree (extending the length).
+            \item If it is not greater, i search for its successor (the smallest element in the BST that is greater than or equal to the current key) and replace it, this maintains the property required for the LIS algorithm.
+        \end{itemize}
+
+        The initial sorting takes $\Theta(n \log n)$. then i perform $n$ insertions/searches in the BST, and each operation costs on average $\Theta(\log n)$, so the total time complexity is $\Theta(n \log n)$. The space complexity is $\Theta(n)$ to store the nodes of the tree.
+
 \end{itemize}
-
-
-
 \end{document}

@@ -221,9 +221,9 @@ impl Course {
 
         /* collect beauty by difficulty */
         let b_by_d: Vec<u32> = pairs.into_iter().map(|(_d, b)| *b).collect();
-        if b_by_d.is_empty() {return 0;}
 
-        /* add the root */
+        if b_by_d.is_empty() { return 0; }
+
         self.bst.add(b_by_d[0]);
 
         /* lis algo based on successor: 
@@ -318,6 +318,7 @@ pub fn fetch_and_test_course(input_folder: &str, output_folder: &str) {
 
     }
 }
+
 
 pub fn fetch_and_test_holiday_planning(input_folder: &str, output_folder: &str) {
     let mut input_files : Vec<PathBuf> = fs::read_dir(input_folder)
