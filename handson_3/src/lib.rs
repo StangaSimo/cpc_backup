@@ -210,7 +210,8 @@ impl Course {
     pub fn lis(&mut self) -> usize {
         let mut pairs: Vec<(&u32, &u32)> = self.d.iter().zip(self.b.iter()).collect();
 
-        /* sort by difficulty, if equal by beauty */
+        /* sort by difficulty, if equal by beauty but in reverse, this for stopping the lis to take 
+         * increasing beauty but with the same difficulty, we want different difficulty */
         pairs.sort_by(|a, b| {
             if a.0 != b.0 {
                 a.0.cmp(b.0)

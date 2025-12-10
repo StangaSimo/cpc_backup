@@ -1,0 +1,11 @@
+let pred = | d : usize | -> bool {
+  let mut last_selected = intervals [0].0;
+  let mut cnt = 1;
+  for & intervallo in intervals.iter () {
+    while intervallo .0. max (last_selected + d) <= intervallo .1 {
+        last_selected = intervallo.0.max (last_selected + d ) ;
+        cnt += 1;
+      }
+  }
+  cnt >= c
+};
